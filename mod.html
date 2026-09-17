@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOD - Kalkulator Ostataka</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 data-i18n="mod_header">Stranica 1: MOD Kalkulator</h1>
+            <p data-i18n="mod_sub">Izračun punih kutija i ostataka</p>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('en')" title="English">🇬🇧</button>
+            <button class="lang-btn" onclick="setLanguage('nl')" title="Nederlands">🇳🇱</button>
+            <button class="lang-btn" onclick="setLanguage('hr')" title="Hrvatski">🇭🇷</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Excel Upload Card -->
+        <div class="card">
+            <h2 data-i18n="excel_title">Uvoz iz Excel tablice</h2>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;" data-i18n="excel_desc">
+                Excel mora sadržavati stupce: Stupac A (Proizvod), Stupac B (Količina), Stupac C (Količina po kutiji). Obrada počinje od drugog reda.
+            </p>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <!-- Manual Entry Card -->
+        <div class="card">
+            <h2 data-i18n="manual_title">Ručni unos stavke</h2>
+            <div class="form-group">
+                <label for="prodName" data-i18n="lbl_prod_name">Naziv proizvoda (npr. AA)</label>
+                <input type="text" id="prodName" placeholder="Unesite naziv proizvoda">
+            </div>
+            <div class="form-group">
+                <label for="prodQty" data-i18n="lbl_total_qty">Ukupna količina (npr. 10)</label>
+                <input type="number" id="prodQty" min="0" placeholder="Unesite ukupnu količinu">
+            </div>
+            <div class="form-group">
+                <label for="boxQty" data-i18n="lbl_box_qty">Količina po kutiji (npr. 3)</label>
+                <input type="number" id="boxQty" min="1" placeholder="Unesite količinu po kutiji">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addManualEntry()" data-i18n="btn_add">Novi unos</button>
+                <button class="btn btn-primary" onclick="processAndShowResults()" data-i18n="btn_show">Prikaži rezultate</button>
+            </div>
+        </div>
+
+        <!-- Buffer Table -->
+        <div class="card">
+            <h2><span data-i18n="prepared_entries">Pripremljene stavke</span> (<span id="entryCount">0</span>)</h2>
+            <table id="bufferTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="col_prod">Proizvod</th>
+                        <th data-i18n="col_total">Ukupna količina</th>
+                        <th data-i18n="col_box">Količina po kutiji</th>
+                        <th data-i18n="col_action">Akcija</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Results Modal Window -->
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 data-i18n="modal_results">Rezultati Obrade MOD</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th data-i18n="col_prod">Proizvod</th>
+                        <th data-i18n="col_total">Ukupna količina</th>
+                        <th data-i18n="col_full">Broj punih kutija</th>
+                        <th data-i18n="col_rem">Ostatak</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="btn-group" style="margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal()" data-i18n="btn_close">Zatvori</button>
+                <button class="btn btn-danger" onclick="clearAllData()" data-i18n="btn_clear">Očisti sve podatke</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_menu">Izbornik</span>
+        </a>
+        <a href="mod.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+            MOD
+        </a>
+        <a href="picking.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Picking
+        </a>
+        <a href="abc.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+            ABC
+        </a>
+        <a href="stopwatch.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span data-i18n="nav_timer">Štoperica</span>
+        </a>
+        <a href="inventory.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <script>
+        const i18nData = {
+            en: {
+                mod_header: "Page 1: MOD Calculator", mod_sub: "Calculate full boxes and remainders",
+                excel_title: "Import from Excel", excel_desc: "Excel columns required: Column A (Product), Column B (Quantity), Column C (Box Size). Starts from row 2.",
+                manual_title: "Manual Item Entry", lbl_prod_name: "Product Name (e.g. AA)", lbl_total_qty: "Total Quantity (e.g. 10)", lbl_box_qty: "Box Size (e.g. 3)",
+                btn_add: "Add Item", btn_show: "Show Results", prepared_entries: "Prepared Items", col_prod: "Product", col_total: "Total Quantity", col_box: "Box Size", col_action: "Action",
+                modal_results: "MOD Processing Results", col_full: "Full Boxes", col_rem: "Remainder", btn_close: "Close", btn_clear: "Clear All Data", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            nl: {
+                mod_header: "Pagina 1: MOD Calculator", mod_sub: "Bereken volle dozen en restanten",
+                excel_title: "Importeren uit Excel", excel_desc: "Excel-kolommen vereist: Kolom A (Product), Kolom B (Aantal), Kolom C (Doosgrootte). Begint vanaf rij 2.",
+                manual_title: "Handmatige Invoer", lbl_prod_name: "Productnaam (bijv. AA)", lbl_total_qty: "Totale Hoeveelheid (bijv. 10)", lbl_box_qty: "Doosgrootte (bijv. 3)",
+                btn_add: "Toevoegen", btn_show: "Toon Resultaten", prepared_entries: "Voorbereide Items", col_prod: "Product", col_total: "Totale Hoeveelheid", col_box: "Doosgrootte", col_action: "Actie",
+                modal_results: "MOD Verwerkingsresultaten", col_full: "Volle Dozen", col_rem: "Restant", btn_close: "Sluiten", btn_clear: "Wis Alle Gegevens", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            hr: {
+                mod_header: "Stranica 1: MOD Kalkulator", mod_sub: "Izračun punih kutija i ostataka",
+                excel_title: "Uvoz iz Excel tablice", excel_desc: "Excel mora sadržavati stupce: Stupac A (Proizvod), Stupac B (Količina), Stupac C (Količina po kutiji). Obrada počinje od drugog reda.",
+                manual_title: "Ručni unos stavke", lbl_prod_name: "Naziv proizvoda (npr. AA)", lbl_total_qty: "Ukupna količina (npr. 10)", lbl_box_qty: "Količina po kutiji (npr. 3)",
+                btn_add: "Novi unos", btn_show: "Prikaži rezultate", prepared_entries: "Pripremljene stavke", col_prod: "Proizvod", col_total: "Ukupna količina", col_box: "Količina po kutiji", col_action: "Akcija",
+                modal_results: "Rezultati Obrade MOD", col_full: "Broj punih kutija", col_rem: "Ostatak", btn_close: "Zatvori", btn_clear: "Očisti sve podatke", nav_menu: "Izbornik", nav_timer: "Štoperica"
+            }
+        };
+
+        let currentLang = sessionStorage.getItem('appLang') || 'en';
+        let modData = [];
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            sessionStorage.setItem('appLang', lang);
+
+            const btns = document.querySelectorAll('.lang-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(lang === 'en') btns[0]?.classList.add('active');
+            if(lang === 'nl') btns[1]?.classList.add('active');
+            if(lang === 'hr') btns[2]?.classList.add('active');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+            });
+        }
+
+        document.getElementById('excelFile').addEventListener('change', handleExcelUpload);
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row && row.length >= 3) {
+                        const name = String(row[0]).trim();
+                        const qty = parseInt(row[1]) || 0;
+                        const boxQty = parseInt(row[2]) || 1;
+                        if (name) modData.push({ name, qty, boxQty });
+                    }
+                }
+                updateBufferTable();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addManualEntry() {
+            const name = document.getElementById('prodName').value.trim();
+            const qty = parseInt(document.getElementById('prodQty').value);
+            const boxQty = parseInt(document.getElementById('boxQty').value);
+
+            if (!name || isNaN(qty) || isNaN(boxQty) || boxQty <= 0) {
+                alert('Molimo unesite ispravne podatke.');
+                return;
+            }
+
+            modData.push({ name, qty, boxQty });
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodQty').value = '';
+            document.getElementById('boxQty').value = '';
+            updateBufferTable();
+        }
+
+        function removeEntry(index) {
+            modData.splice(index, 1);
+            updateBufferTable();
+        }
+
+        function updateBufferTable() {
+            const tbody = document.querySelector('#bufferTable tbody');
+            tbody.innerHTML = '';
+            document.getElementById('entryCount').innerText = modData.length;
+
+            modData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.qty}</td>
+                    <td>${item.boxQty}</td>
+                    <td><button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="removeEntry(${index})">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function processAndShowResults() {
+            if (modData.length === 0) return;
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+
+            modData.forEach(item => {
+                const fullBoxes = Math.floor(item.qty / item.boxQty);
+                const remainder = item.qty % item.boxQty;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.qty}</td>
+                    <td><span style="color:var(--success); font-weight:bold;">${fullBoxes}</span></td>
+                    <td><span style="color:var(--danger); font-weight:bold;">${remainder}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        function clearAllData() {
+            modData = [];
+            updateBufferTable();
+            closeModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => setLanguage(currentLang));
+    </script>
+</body>
+</html>

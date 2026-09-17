@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - Pretraga Skladišta</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 data-i18n="inv_header">Stranica 5: Inventory Pretraga</h1>
+            <p data-i18n="inv_sub">Pretraživanje inventara i praznih pozicija</p>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('en')" title="English">🇬🇧</button>
+            <button class="lang-btn" onclick="setLanguage('nl')" title="Nederlands">🇳🇱</button>
+            <button class="lang-btn" onclick="setLanguage('hr')" title="Hrvatski">🇭🇷</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Excel Upload Card -->
+        <div class="card">
+            <h2 data-i18n="excel_title">Uvoz Excel tablice Inventara</h2>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;" data-i18n="excel_inv_desc">
+                Stupci u Excelu: Stupac A (Lokacija), Stupac B (Proizvod), Stupac C (PalletID), Stupac D (Qty). Obrada počinje od drugog reda.
+            </p>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <!-- Search & Filter Card -->
+        <div class="card" id="searchCard" style="display:none;">
+            <h2 data-i18n="filter_title">Pretraživanje & Filtriranje</h2>
+            
+            <div class="form-group">
+                <label for="searchInput" data-i18n="lbl_search">Brza pretraga (Naziv, PalletID ili Lokacija):</label>
+                <input type="text" id="searchInput" placeholder="Tipkajte..." oninput="filterAndRender()">
+            </div>
+
+            <div class="flex-row" style="flex-wrap:wrap; gap:10px; margin-bottom: 12px;">
+                <div class="form-group flex-1">
+                    <label for="filterLetter" data-i18n="lbl_1st_letter">1. Slovo Lokacije (A-Z)</label>
+                    <select id="filterLetter" onchange="filterAndRender()">
+                        <option value="">-- Sva Slova --</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="filterLevel" data-i18n="lbl_3rd_num">3. Broj (4. znak: 0-9)</label>
+                    <select id="filterLevel" onchange="filterAndRender()">
+                        <option value="">-- Svi Nivoi --</option>
+                        <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+                        <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                        <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="emptyOnly" onchange="filterAndRender()" style="width:auto;">
+                <label for="emptyOnly" style="margin:0; font-weight:bold; color:#0284c7;" data-i18n="chk_empty_only">Prikaži samo prazne lokacije</label>
+            </div>
+        </div>
+
+        <!-- Inventory List Card -->
+        <div class="card" id="listCard" style="display:none;">
+            <h2><span data-i18n="results">Rezultati Inventara</span> (<span id="matchCount">0</span>)</h2>
+            <table id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th data-i18n="col_loc">Lokacija</th>
+                        <th data-i18n="col_prod">Proizvod</th>
+                        <th>Pallet ID</th>
+                        <th data-i18n="col_qty">Količina (Qty)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_menu">Izbornik</span>
+        </a>
+        <a href="mod.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+            MOD
+        </a>
+        <a href="picking.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Picking
+        </a>
+        <a href="abc.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+            ABC
+        </a>
+        <a href="stopwatch.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span data-i18n="nav_timer">Štoperica</span>
+        </a>
+        <a href="inventory.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <script>
+        const i18nData = {
+            en: {
+                inv_header: "Page 5: Inventory Search", inv_sub: "Search inventory and locate empty slots",
+                excel_title: "Import Inventory Excel", excel_inv_desc: "Columns: A (Location), B (Product), C (PalletID), D (Qty). Starts from row 2.",
+                filter_title: "Search & Filter", lbl_search: "Quick Search:", lbl_1st_letter: "1st Letter (A-Z)", lbl_3rd_num: "3rd Number (4th char)", chk_empty_only: "Show empty locations only",
+                results: "Inventory Results", col_loc: "Location", col_prod: "Product", col_qty: "Qty", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            nl: {
+                inv_header: "Pagina 5: Voorraad Zoeken", inv_sub: "Doorzoek voorraad en lege plekken",
+                excel_title: "Importeren Voorraad Excel", excel_inv_desc: "Kolommen: A (Locatie), B (Product), C (PalletID), D (Aantal). Begint vanaf rij 2.",
+                filter_title: "Zoeken & Filteren", lbl_search: "Snel Zoeken:", lbl_1st_letter: "1e Letter (A-Z)", lbl_3rd_num: "3e Cijfer (4e teken)", chk_empty_only: "Toon alleen lege locaties",
+                results: "Voorraad Resultaten", col_loc: "Locatie", col_prod: "Product", col_qty: "Aantal", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            hr: {
+                inv_header: "Stranica 5: Inventory Pretraga", inv_sub: "Pretraživanje inventara i praznih pozicija",
+                excel_title: "Uvoz Excel tablice Inventara", excel_inv_desc: "Stupci u Excelu: Stupac A (Lokacija), Stupac B (Proizvod), Stupac C (PalletID), Stupac D (Qty). Obrada počinje od drugog reda.",
+                filter_title: "Pretraživanje & Filtriranje", lbl_search: "Brza pretraga:", lbl_1st_letter: "1. Slovo Lokacije (A-Z)", lbl_3rd_num: "3. Broj (4. znak: 0-9)", chk_empty_only: "Prikaži samo prazne lokacije",
+                results: "Rezultati Inventara", col_loc: "Lokacija", col_prod: "Proizvod", col_qty: "Količina (Qty)", nav_menu: "Izbornik", nav_timer: "Štoperica"
+            }
+        };
+
+        let currentLang = sessionStorage.getItem('appLang') || 'en';
+        let inventoryData = [];
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            sessionStorage.setItem('appLang', lang);
+            const btns = document.querySelectorAll('.lang-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(lang === 'en') btns[0]?.classList.add('active');
+            if(lang === 'nl') btns[1]?.classList.add('active');
+            if(lang === 'hr') btns[2]?.classList.add('active');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+            });
+        }
+
+        const letterSelect = document.getElementById('filterLetter');
+        for (let i = 65; i <= 90; i++) {
+            const opt = document.createElement('option'); opt.value = String.fromCharCode(i); opt.innerText = String.fromCharCode(i);
+            letterSelect.appendChild(opt);
+        }
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(evt.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(evt.target.result), {type: 'array'}).SheetNames[0]], {header: 1});
+                inventoryData = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    if (r && r.length > 0) {
+                        const loc = String(r[0]||'').trim(), prod = String(r[1]||'').trim(), pallet = String(r[2]||'').trim(), qty = r[3] !== undefined ? parseFloat(r[3]) : '';
+                        if (loc) inventoryData.push({ location: loc, product: prod, palletId: pallet, qty: qty, isEmpty: (!prod && !pallet && qty === '') });
+                    }
+                }
+                document.getElementById('searchCard').style.display = 'block'; document.getElementById('listCard').style.display = 'block';
+                filterAndRender();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function filterAndRender() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const letterFilter = document.getElementById('filterLetter').value;
+            const levelFilter = document.getElementById('filterLevel').value;
+            const emptyOnly = document.getElementById('emptyOnly').checked;
+
+            let filtered = inventoryData.filter(item => {
+                const loc = item.location.toUpperCase();
+                return (!query || loc.toLowerCase().includes(query) || item.product.toLowerCase().includes(query) || item.palletId.toLowerCase().includes(query)) &&
+                       (!letterFilter || loc.charAt(0) === letterFilter) &&
+                       (!levelFilter || (loc.length >= 4 && loc.charAt(3) === levelFilter)) &&
+                       (!emptyOnly || item.isEmpty);
+            });
+
+            document.getElementById('matchCount').innerText = filtered.length;
+            const tbody = document.querySelector('#inventoryTable tbody'); tbody.innerHTML = '';
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-weight:bold; color:#0369a1;">${item.location}</span></td><td>${item.product || '<em>-- Empty --</em>'}</td><td><code>${item.palletId}</code></td><td>${item.qty !== '' ? item.qty : '0'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => setLanguage(currentLang));
+    </script>
+</body>
+</html>

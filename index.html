@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Swiss Knife</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+    <style>
+        /* Zaštita navigacije od Tiiny.host bannera na dnu */
+        .nav-bar {
+            position: fixed !important;
+            bottom: 40px !important;
+            left: 0;
+            right: 0;
+            z-index: 99999 !important;
+        }
+        body {
+            padding-bottom: 120px !important;
+        }
+        .lang-switcher {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .lang-btn.active {
+            background: #ffffff;
+            color: #0284c7;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 data-i18n="app_title">Warehouse Swiss Knife</h1>
+            <p data-i18n="app_subtitle">Multi-tool Operations Assistant</p>
+        </div>
+        <!-- Gumbi za jezik (prikazuju se ispravno i na Windowsima i na mobitelu) -->
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" onclick="setLanguage('nl')">NL</button>
+            <button class="lang-btn" onclick="setLanguage('hr')">HR</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 data-i18n="welcome_title">Welcome to Warehouse Swiss Knife</h2>
+            <p style="margin-bottom: 15px; color: #64748b; font-size: 0.95rem; line-height: 1.5;" data-i18n="welcome_desc">
+                Select a tool from the list below or navigate using the bottom toolbar.
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px;">
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="mod_title">1. MOD (Remainder)</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="mod_desc">Calculate full boxes and remainder quantities.</p>
+                <button class="btn btn-primary" onclick="goTo('mod.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="picking_title">2. Picking</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="picking_desc">Aggregate item totals across lines with custom sorting.</p>
+                <button class="btn btn-primary" onclick="goTo('picking.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="abc_title">3. ABC Analysis</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="abc_desc">Classify products (33/34/33%) and filter location groups.</p>
+                <button class="btn btn-primary" onclick="goTo('abc.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="stopwatch_title">4. Stopwatch</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="stopwatch_desc">Time operational tasks, track laps, and export to Excel.</p>
+                <button class="btn btn-primary" onclick="goTo('stopwatch.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="inventory_title">5. Inventory</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="inventory_desc">Search inventory, filter 3rd number, and locate empty slots.</p>
+                <button class="btn btn-primary" onclick="goTo('inventory.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="javascript:goTo('index.html')" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_menu">Menu</span>
+        </a>
+        <a href="javascript:goTo('mod.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+            MOD
+        </a>
+        <a href="javascript:goTo('picking.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Picking
+        </a>
+        <a href="javascript:goTo('abc.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+            ABC
+        </a>
+        <a href="javascript:goTo('stopwatch.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span data-i18n="nav_timer">Timer</span>
+        </a>
+        <a href="javascript:goTo('inventory.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <script>
+        const i18nData = {
+            en: {
+                app_title: "Warehouse Swiss Knife", app_subtitle: "Multi-tool Operations Assistant",
+                welcome_title: "Welcome to Warehouse Swiss Knife", welcome_desc: "Select a tool from the list below or navigate using the bottom toolbar.",
+                mod_title: "1. MOD (Remainder)", mod_desc: "Calculate full boxes and remainder quantities.",
+                picking_title: "2. Picking", picking_desc: "Aggregate item totals across lines with custom sorting.",
+                abc_title: "3. ABC Analysis", abc_desc: "Classify products (33/34/33%) and filter location groups.",
+                stopwatch_title: "4. Stopwatch", stopwatch_desc: "Time operational tasks, track laps, and export to Excel.",
+                inventory_title: "5. Inventory", inventory_desc: "Search inventory, filter 3rd number, and locate empty slots.",
+                btn_open: "Open Tool", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            nl: {
+                app_title: "Magazijn Zwitsers Mes", app_subtitle: "Multi-tool Operationele Assistent",
+                welcome_title: "Welkom bij Magazijn Zwitsers Mes", welcome_desc: "Kies een tool uit de onderstaande lijst of navigeer via de menubalk.",
+                mod_title: "1. MOD (Restant)", mod_desc: "Bereken volle dozen en resterende aantallen.",
+                picking_title: "2. Picking", picking_desc: "Samenvoegen van aantallen per regel met sortering.",
+                abc_title: "3. ABC Analyse", abc_desc: "Classificeer producten (33/34/33%) en filter locaties.",
+                stopwatch_title: "4. Stopwatch", stopwatch_desc: "Meet operationele tijden en exporteer naar Excel.",
+                inventory_title: "5. Voorraad", inventory_desc: "Doorzoek voorraad en filter op 3e cijfer of lege plekken.",
+                btn_open: "Openen", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            hr: {
+                app_title: "Skladišni Švicarski Nož", app_subtitle: "Glavni izbornik i pregled alata",
+                welcome_title: "Dobrodošli u Skladišnu Aplikaciju", welcome_desc: "Aplikacija nudi sve ključne sklopove za učinkovit rad u skladištu: izračun ostataka pakiranja, konsolidaciju i sortiranje picking linija, ABC analizu artikala s filtriranjem lokacija, mjerenje vremena (štopericu) te pretraživanje inventara.",
+                mod_title: "1. MOD (Ostatak)", mod_desc: "Izračun punih kutija i ostataka (modulo) iz ukupnih količina.",
+                picking_title: "2. Picking", picking_desc: "Zbroj količina istih artikala po linijama uz mogućnost sortiranja.",
+                abc_title: "3. ABC Klasifikacija", abc_desc: "Segmentacija proizvoda (33/34/33%) i pretraživanje lokacija.",
+                stopwatch_title: "4. Štoperica", stopwatch_desc: "Mjerenje vremena radnih operacija, prolaznih vremena i Excel izvoz.",
+                inventory_title: "5. Inventory", inventory_desc: "Pretraživanje inventara, 3. broja lokacije i praznih pozicija.",
+                btn_open: "Otvori Alat", nav_menu: "Izbornik", nav_timer: "Štoperica"
+            }
+        };
+
+        // Korištenje localStorage radi stabilnijeg spremanja postavki
+        let currentLang = localStorage.getItem('appLang') || sessionStorage.getItem('appLang') || 'hr';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('appLang', lang);
+            sessionStorage.setItem('appLang', lang);
+
+            const btns = document.querySelectorAll('.lang-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(lang === 'en') btns[0]?.classList.add('active');
+            if(lang === 'nl') btns[1]?.classList.add('active');
+            if(lang === 'hr') btns[2]?.classList.add('active');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+            });
+        }
+
+        function goTo(page) {
+            window.location.href = page;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>

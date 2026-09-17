@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picking - Konsolidacija Linija</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 data-i18n="picking_header">Stranica 2: Picking Konsolidacija</h1>
+            <p data-i18n="picking_sub">Grupiranje i zbrajanje artikala po linijama</p>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('en')" title="English">🇬🇧</button>
+            <button class="lang-btn" onclick="setLanguage('nl')" title="Nederlands">🇳🇱</button>
+            <button class="lang-btn" onclick="setLanguage('hr')" title="Hrvatski">🇭🇷</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Excel Upload Card -->
+        <div class="card">
+            <h2 data-i18n="excel_title">Uvoz iz Excel tablice</h2>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;" data-i18n="excel_picking_desc">
+                Excel tablica mora sadržavati stupce: Stupac A (Proizvod), Stupac B (Količina), Stupac C (Linija). Obrada počinje od A2, B2, C2.
+            </p>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <!-- Manual Entry Card -->
+        <div class="card">
+            <h2 data-i18n="manual_title">Ručni unos stavke</h2>
+            <div class="form-group">
+                <label for="prodName" data-i18n="lbl_prod_name">Proizvod</label>
+                <input type="text" id="prodName" placeholder="Naziv artikla (npr. Artikl X)">
+            </div>
+            <div class="form-group">
+                <label for="prodTotal" data-i18n="lbl_total_qty">Količina</label>
+                <input type="number" id="prodTotal" min="1" placeholder="Unesite količinu">
+            </div>
+            <div class="form-group">
+                <label for="prodLine" data-i18n="lbl_line">Linija / Lokacija</label>
+                <input type="text" id="prodLine" placeholder="Oznaka linije (npr. L-01)">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addManualEntry()" data-i18n="btn_add">Novi unos</button>
+                <button class="btn btn-primary" onclick="processAndShowResults()" data-i18n="btn_show">Prikaži rezultate</button>
+            </div>
+        </div>
+
+        <!-- Buffer Table -->
+        <div class="card">
+            <h2><span data-i18n="prepared_lines">Pripremljene linije</span> (<span id="entryCount">0</span>)</h2>
+            <table id="bufferTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="col_prod">Proizvod</th>
+                        <th data-i18n="col_total">Količina</th>
+                        <th data-i18n="col_line">Linija</th>
+                        <th data-i18n="col_action">Akcija</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 data-i18n="modal_picking_results">Konsolidirani Picking Rezultati</h2>
+            
+            <div class="flex-row" style="flex-wrap:wrap; gap:10px; margin-top:10px;">
+                <div class="form-group flex-1">
+                    <label for="groupBy" data-i18n="lbl_group_by">Način Zbrajanja (Grupiranje):</label>
+                    <select id="groupBy" onchange="recalculateResults()">
+                        <option value="line" data-i18n="opt_by_line">Zbroji po Liniji (Ukupno za liniju)</option>
+                        <option value="product" data-i18n="opt_by_product">Zbroji po Proizvodu (Ukupno za ime)</option>
+                        <option value="both" data-i18n="opt_by_both">Zbroji po Proizvodu i Liniji</option>
+                    </select>
+                </div>
+
+                <div class="form-group flex-1">
+                    <label for="sortBy" data-i18n="lbl_sort_by">Sortiraj rezultate po:</label>
+                    <select id="sortBy" onchange="renderResults()">
+                        <option value="total" data-i18n="opt_sort_qty">Ukupna Količina (Silazno)</option>
+                        <option value="name" data-i18n="opt_sort_name">Naziv / Linija (Abecedno)</option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="resultsTable">
+                <thead id="resultsHead"></thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+
+            <div class="btn-group" style="margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal()" data-i18n="btn_close">Zatvori</button>
+                <button class="btn btn-danger" onclick="clearAllData()" data-i18n="btn_clear">Očisti podatke</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_menu">Izbornik</span>
+        </a>
+        <a href="mod.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+            MOD
+        </a>
+        <a href="picking.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Picking
+        </a>
+        <a href="abc.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+            ABC
+        </a>
+        <a href="stopwatch.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span data-i18n="nav_timer">Štoperica</span>
+        </a>
+        <a href="inventory.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <script>
+        const i18nData = {
+            en: {
+                picking_header: "Page 2: Picking Aggregation", picking_sub: "Group and sum items by lines or products",
+                excel_title: "Import from Excel", excel_picking_desc: "Excel columns required: Column A (Product), Column B (Quantity), Column C (Line). Starts from row 2.",
+                manual_title: "Manual Entry", lbl_prod_name: "Product Name", lbl_total_qty: "Quantity", lbl_line: "Line / Location",
+                btn_add: "Add Entry", btn_show: "Show Results", prepared_lines: "Prepared Lines", col_prod: "Product", col_total: "Quantity", col_line: "Line", col_action: "Action",
+                modal_picking_results: "Consolidated Picking Results", lbl_group_by: "Grouping Mode:", opt_by_line: "Sum by Line", opt_by_product: "Sum by Product", opt_by_both: "Sum by Product & Line",
+                lbl_sort_by: "Sort Results:", opt_sort_qty: "Quantity (High to Low)", opt_sort_name: "Name / Line (A-Z)", btn_close: "Close", btn_clear: "Clear Data", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            nl: {
+                picking_header: "Pagina 2: Picking Aggregatie", picking_sub: "Groepeer en som artikelen per regel",
+                excel_title: "Importeren uit Excel", excel_picking_desc: "Excel-kolommen vereist: Kolom A (Product), Kolom B (Aantal), Kolom C (Regel). Begint vanaf rij 2.",
+                manual_title: "Handmatige Invoer", lbl_prod_name: "Productnaam", lbl_total_qty: "Aantal", lbl_line: "Regel / Locatie",
+                btn_add: "Toevoegen", btn_show: "Toon Resultaten", prepared_lines: "Voorbereide Regels", col_prod: "Product", col_total: "Aantal", col_line: "Regel", col_action: "Actie",
+                modal_picking_results: "Geconsolideerde Picking Resultaten", lbl_group_by: "Groepeer op:", opt_by_line: "Som per Regel", opt_by_product: "Som per Product", opt_by_both: "Som per Product & Regel",
+                lbl_sort_by: "Sorteren op:", opt_sort_qty: "Aantal (Hoog naar Laag)", opt_sort_name: "Naam / Regel (A-Z)", btn_close: "Sluiten", btn_clear: "Wis Gegevens", nav_menu: "Menu", nav_timer: "Timer"
+            },
+            hr: {
+                picking_header: "Stranica 2: Picking Konsolidacija", picking_sub: "Grupiranje i zbrajanje artikala po linijama",
+                excel_title: "Uvoz iz Excel tablice", excel_picking_desc: "Excel tablica mora sadržavati stupce: Stupac A (Proizvod), Stupac B (Količina), Stupac C (Linija). Obrada počinje od drugog reda.",
+                manual_title: "Ručni unos stavke", lbl_prod_name: "Proizvod", lbl_total_qty: "Količina", lbl_line: "Linija / Lokacija",
+                btn_add: "Novi unos", btn_show: "Prikaži rezultate", prepared_lines: "Pripremljene linije", col_prod: "Proizvod", col_total: "Količina", col_line: "Linija", col_action: "Akcija",
+                modal_picking_results: "Konsolidirani Picking Rezultati", lbl_group_by: "Način Zbrajanja:", opt_by_line: "Zbroji po Liniji", opt_by_product: "Zbroji po Proizvodu", opt_by_both: "Zbroji po Proizvodu i Liniji",
+                lbl_sort_by: "Sortiraj rezultate po:", opt_sort_qty: "Ukupna Količina (Silazno)", opt_sort_name: "Naziv / Linija (Abecedno)", btn_close: "Zatvori", btn_clear: "Očisti podatke", nav_menu: "Izbornik", nav_timer: "Štoperica"
+            }
+        };
+
+        let currentLang = sessionStorage.getItem('appLang') || 'en';
+        let rawEntries = [], aggregatedResults = [];
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            sessionStorage.setItem('appLang', lang);
+            const btns = document.querySelectorAll('.lang-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(lang === 'en') btns[0]?.classList.add('active');
+            if(lang === 'nl') btns[1]?.classList.add('active');
+            if(lang === 'hr') btns[2]?.classList.add('active');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+            });
+        }
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const rows = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(evt.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(evt.target.result), {type: 'array'}).SheetNames[0]], {header: 1});
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    if (r && r.length >= 3 && String(r[0]).trim() && String(r[2]).trim()) {
+                        rawEntries.push({ product: String(r[0]).trim(), total: parseInt(r[1]) || 0, line: String(r[2]).trim() });
+                    }
+                }
+                updateBufferTable();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function addManualEntry() {
+            const product = document.getElementById('prodName').value.trim();
+            const total = parseInt(document.getElementById('prodTotal').value);
+            const line = document.getElementById('prodLine').value.trim();
+            if (!product || isNaN(total) || !line) return alert('Popunite sva polja.');
+            rawEntries.push({ product, total, line });
+            document.getElementById('prodName').value = ''; document.getElementById('prodTotal').value = ''; document.getElementById('prodLine').value = '';
+            updateBufferTable();
+        }
+
+        function removeEntry(idx) { rawEntries.splice(idx, 1); updateBufferTable(); }
+
+        function updateBufferTable() {
+            const tbody = document.querySelector('#bufferTable tbody'); tbody.innerHTML = '';
+            document.getElementById('entryCount').innerText = rawEntries.length;
+            rawEntries.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${index + 1}</td><td><strong>${item.product}</strong></td><td>${item.total}</td><td>${item.line}</td><td><button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="removeEntry(${index})">X</button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function processAndShowResults() { if (rawEntries.length === 0) return; recalculateResults(); document.getElementById('resultModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('resultModal').style.display = 'none'; }
+        function clearAllData() { rawEntries = []; aggregatedResults = []; updateBufferTable(); closeModal(); }
+
+        function recalculateResults() {
+            const mode = document.getElementById('groupBy').value, map = new Map();
+            rawEntries.forEach(item => {
+                let key = mode === 'line' ? item.line.toUpperCase() : (mode === 'product' ? item.product.toUpperCase() : `${item.product.toUpperCase()}__${item.line.toUpperCase()}`);
+                if (!map.has(key)) map.set(key, { label: mode === 'line' ? item.line : item.product, product: item.product, line: item.line, total: 0 });
+                map.get(key).total += item.total;
+            });
+            aggregatedResults = Array.from(map.values()); renderResults();
+        }
+
+        function renderResults() {
+            const sortBy = document.getElementById('sortBy').value, mode = document.getElementById('groupBy').value;
+            aggregatedResults.sort((a, b) => sortBy === 'total' ? b.total - a.total : (a.label||a.product).localeCompare(b.label||b.product));
+            const tbody = document.getElementById('resultsBody'); tbody.innerHTML = '';
+            document.getElementById('resultsHead').innerHTML = mode === 'both' ? `<tr><th>${i18nData[currentLang].col_prod}</th><th>${i18nData[currentLang].col_line}</th><th>${i18nData[currentLang].col_total}</th></tr>` : `<tr><th>${mode === 'line' ? i18nData[currentLang].col_line : i18nData[currentLang].col_prod}</th><th>${i18nData[currentLang].col_total}</th></tr>`;
+            aggregatedResults.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = mode === 'both' ? `<td><strong>${item.product}</strong></td><td><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold;">${item.line}</span></td><td><strong>${item.total}</strong></td>` : `<td><strong>${item.label}</strong></td><td><strong>${item.total}</strong></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => setLanguage(currentLang));
+    </script>
+</body>
+</html>

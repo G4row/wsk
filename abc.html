@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC Klasifikacija i Lokacije</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1 data-i18n="abc_header">Stranica 3: ABC Analiza & Lokacije</h1>
+            <p data-i18n="abc_sub">Zasebna i kombinirana ABC klasifikacija (33% / 34% / 33%) i pretraga lokacija</p>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('en')" title="English">🇬🇧</button>
+            <button class="lang-btn" onclick="setLanguage('nl')" title="Nederlands">🇳🇱</button>
+            <button class="lang-btn" onclick="setLanguage('hr')" title="Hrvatski">🇭🇷</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Excel Upload Card -->
+        <div class="card">
+            <h2 data-i18n="excel_title">Uvoz iz Excel tablice</h2>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;" data-i18n="excel_abc_desc">
+                <strong>List 1 (Proizvodi & Lokacije):</strong> Stupci A (Ime), B (Težina), C (Prodaja), D (Cijena). Lokacije iz stupaca E i F (ili s drugog lista) automatski se učitavaju.
+            </p>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <!-- Manual Product Input -->
+        <div class="card">
+            <h2 data-i18n="manual_prod_title">Ručni unos proizvoda</h2>
+            <div class="form-group">
+                <label for="prodName" data-i18n="lbl_prod_name">Ime proizvoda</label>
+                <input type="text" id="prodName" placeholder="Naziv proizvoda">
+            </div>
+            <div class="flex-row">
+                <div class="form-group flex-1">
+                    <label for="prodWeight" data-i18n="lbl_weight">Težina (kg)</label>
+                    <input type="number" id="prodWeight" step="0.01" placeholder="Težina">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="prodSales" data-i18n="lbl_sales">Prodaja (kom)</label>
+                    <input type="number" id="prodSales" placeholder="Količina prodaje">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="prodPrice" data-i18n="lbl_price">Cijena (€)</label>
+                    <input type="number" id="prodPrice" step="0.01" placeholder="Cijena">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addManualProduct()" data-i18n="btn_add_prod">Dodaj Proizvod</button>
+                <button class="btn btn-primary" onclick="calculateABC()" data-i18n="btn_run_abc">Izvrši ABC Klasifikaciju (33% / 34% / 33%)</button>
+            </div>
+        </div>
+
+        <!-- Prepared Products Table -->
+        <div class="card">
+            <h2><span data-i18n="prepared_prods">Uneseni proizvodi</span> (<span id="productCount">0</span>)</h2>
+            
+            <div class="form-group" style="margin-bottom:15px;">
+                <label for="sortProductsBy" data-i18n="lbl_sort_prods">Sortiraj proizvode po:</label>
+                <select id="sortProductsBy" onchange="renderProductsTable()">
+                    <option value="name" data-i18n="opt_sort_name_asc">Naziv proizvoda (Abecedno)</option>
+                    <option value="combined" data-i18n="opt_sort_comb">Kombinirana Kategorija [Težina+Prodaja]</option>
+                    <option value="weight" data-i18n="opt_sort_weight">ABC Težina (A -> B -> C)</option>
+                    <option value="sales" data-i18n="opt_sort_sales">ABC Prodaja (A -> B -> C)</option>
+                    <option value="price" data-i18n="opt_sort_price">ABC Cijena (A -> B -> C)</option>
+                </select>
+            </div>
+
+            <table id="productBufferTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="col_prod">Proizvod</th>
+                        <th data-i18n="col_cat_comb">Kombinirana Kat. [Težina+Prodaja]</th>
+                        <th data-i18n="col_weight_abc">Težina (kg) [ABC]</th>
+                        <th data-i18n="col_sales_abc">Prodaja (kom) [ABC]</th>
+                        <th data-i18n="col_price_abc">Cijena (€) [ABC]</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Location Entry & Filter Card -->
+        <div class="card" id="locationSection">
+            <h2 data-i18n="loc_search_title">Pretraživanje & Unos Lokacija</h2>
+
+            <!-- Manual Location Add Form -->
+            <div class="flex-row" style="flex-wrap:wrap; gap:10px; margin-bottom:15px; background:#f8fafc; padding:12px; border-radius:8px; border:1px dashed #cbd5e1;">
+                <div class="form-group flex-1" style="margin:0;">
+                    <label for="manualLocName" data-i18n="lbl_loc_name">Ime Lokacije (npr. C324D)</label>
+                    <input type="text" id="manualLocName" placeholder="Unesite ime lokacije">
+                </div>
+                <div class="form-group flex-1" style="margin:0;">
+                    <label for="manualLocGroup" data-i18n="lbl_loc_group">Grupa Lokacije</label>
+                    <select id="manualLocGroup">
+                        <option value="AA">AA</option><option value="AB">AB</option><option value="AC">AC</option>
+                        <option value="BA">BA</option><option value="BB">BB</option><option value="BC">BC</option>
+                        <option value="CA">CA</option><option value="CB">CB</option><option value="CC">CC</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button class="btn btn-secondary" onclick="addManualLocation()" style="height:42px;" data-i18n="btn_add_loc">Dodaj Lokaciju</button>
+                </div>
+            </div>
+
+            <div class="flex-row" style="flex-wrap:wrap; gap:10px;">
+                <div class="form-group flex-1">
+                    <label for="filterGroup" data-i18n="lbl_filter_group">Grupa Lokacije</label>
+                    <select id="filterGroup" onchange="filterLocations()">
+                        <option value="" data-i18n="opt_all_groups">-- Sve Grupe --</option>
+                        <option value="AA">AA</option><option value="AB">AB</option><option value="AC">AC</option>
+                        <option value="BA">BA</option><option value="BB">BB</option><option value="BC">BC</option>
+                        <option value="CA">CA</option><option value="CB">CB</option><option value="CC">CC</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="filterLetter" data-i18n="lbl_filter_letter">1. Slovo Lokacije (A-Z)</label>
+                    <select id="filterLetter" onchange="filterLocations()">
+                        <option value="" data-i18n="opt_all_letters">-- Sva Slova --</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="filterLevel" data-i18n="lbl_filter_level">3. Broj (4. znak: 0-9)</label>
+                    <select id="filterLevel" onchange="filterLocations()">
+                        <option value="" data-i18n="opt_all_levels">-- Svi Nivoi --</option>
+                        <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+                        <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                        <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 style="margin-top:15px; font-size:1rem; color:#475569;"><span data-i18n="loc_results">Rezultati lokacija</span> (<span id="locationCount">0</span>):</h3>
+            <table id="locationResultsTable">
+                <thead>
+                    <tr>
+                        <th data-i18n="col_loc_name">Ime Lokacije</th>
+                        <th data-i18n="col_group">Grupa</th>
+                        <th data-i18n="col_1st_letter">1. Slovo</th>
+                        <th data-i18n="col_3rd_num">3. Broj (4. Znak)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_menu">Izbornik</span>
+        </a>
+        <a href="mod.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+            MOD
+        </a>
+        <a href="picking.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Picking
+        </a>
+        <a href="abc.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+            ABC
+        </a>
+        <a href="stopwatch.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span data-i18n="nav_timer">Štoperica</span>
+        </a>
+        <a href="inventory.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <script>
+        const i18nData = {
+            en: {
+                abc_header: "Page 3: ABC Analysis & Locations", abc_sub: "Individual and combined ABC classification (33% / 34% / 33%) & locations",
+                excel_title: "Import from Excel", excel_abc_desc: "Sheet 1: Columns A (Name), B (Weight), C (Sales), D (Price). Locations in E/F or Sheet 2 auto-load.",
+                manual_prod_title: "Manual Product Entry", lbl_prod_name: "Product Name", lbl_weight: "Weight (kg)", lbl_sales: "Sales (pcs)", lbl_price: "Price (€)",
+                btn_add_prod: "Add Product", btn_run_abc: "Run ABC Analysis (33% / 34% / 33%)", prepared_prods: "Uploaded Products", lbl_sort_prods: "Sort products by:",
+                opt_sort_name_asc: "Product Name (A-Z)", opt_sort_comb: "Combined Category [Weight+Sales]", opt_sort_weight: "ABC Weight (A -> B -> C)", opt_sort_sales: "ABC Sales (A -> B -> C)", opt_sort_price: "ABC Price (A -> B -> C)",
+                col_prod: "Product", col_cat_comb: "Combined Cat [Weight+Sales]", col_weight_abc: "Weight (kg) [ABC]", col_sales_abc: "Sales (pcs) [ABC]", col_price_abc: "Price (€) [ABC]",
+                loc_search_title: "Search & Add Locations", lbl_loc_name: "Location Name (e.g. C324D)", lbl_loc_group: "Location Group", btn_add_loc: "Add Location",
+                lbl_filter_group: "Location Group", opt_all_groups: "-- All Groups --", lbl_filter_letter: "1st Letter (A-Z)", opt_all_letters: "-- All Letters --", lbl_filter_level: "3rd Number (4th char)", opt_all_levels: "-- All Levels --",
+                loc_results: "Location Results", col_loc_name: "Location Name", col_group: "Group", col_1st_letter: "1st Letter", col_3rd_num: "3rd Number",
+                nav_menu: "Menu", nav_timer: "Timer", msg_empty_prods: "No products entered for ABC analysis.", msg_enter_name: "Please enter a product name.", msg_enter_loc: "Please enter a location name."
+            },
+            nl: {
+                abc_header: "Pagina 3: ABC Analyse & Locaties", abc_sub: "Individuele en gecombineerde ABC-classificatie (33% / 34% / 33%) & locaties",
+                excel_title: "Importeren uit Excel", excel_abc_desc: "Blad 1: Kolommen A (Naam), B (Gewicht), C (Verkoop), D (Prijs). Locaties in E/F of Blad 2 worden automatisch geladen.",
+                manual_prod_title: "Handmatige Productinvoer", lbl_prod_name: "Productnaam", lbl_weight: "Gewicht (kg)", lbl_sales: "Verkoop (st)", lbl_price: "Prijs (€)",
+                btn_add_prod: "Product Toevoegen", btn_run_abc: "ABC-analyse Uitvoeren (33% / 34% / 33%)", prepared_prods: "Geladen Producten", lbl_sort_prods: "Sorteren op:",
+                opt_sort_name_asc: "Productnaam (A-Z)", opt_sort_comb: "Gecombineerde Categorie [Gewicht+Verkoop]", opt_sort_weight: "ABC Gewicht (A -> B -> C)", opt_sort_sales: "ABC Verkoop (A -> B -> C)", opt_sort_price: "ABC Prijs (A -> B -> C)",
+                col_prod: "Product", col_cat_comb: "Gecombineerde Cat [Gewicht+Verkoop]", col_weight_abc: "Gewicht (kg) [ABC]", col_sales_abc: "Verkoop (st) [ABC]", col_price_abc: "Prijs (€) [ABC]",
+                loc_search_title: "Zoeken & Locaties Toevoegen", lbl_loc_name: "Locatienaam (bijv. C324D)", lbl_loc_group: "Locatiegroep", btn_add_loc: "Locatie Toevoegen",
+                lbl_filter_group: "Locatiegroep", opt_all_groups: "-- Alle Groepen --", lbl_filter_letter: "1e Letter (A-Z)", opt_all_letters: "-- Alle Letters --", lbl_filter_level: "3e Cijfer (4e teken)", opt_all_levels: "-- Alle Niveaus --",
+                loc_results: "Locatieresultaten", col_loc_name: "Locatienaam", col_group: "Groep", col_1st_letter: "1e Letter", col_3rd_num: "3e Cijfer",
+                nav_menu: "Menu", nav_timer: "Timer", msg_empty_prods: "Geen producten ingevoerd voor ABC-analyse.", msg_enter_name: "Voer een productnaam in.", msg_enter_loc: "Voer een locatienaam in."
+            },
+            hr: {
+                abc_header: "Stranica 3: ABC Analiza & Lokacije", abc_sub: "Zasebna i kombinirana (Težina + Prodaja) ABC klasifikacija i sortiranje",
+                excel_title: "Uvoz iz Excel tablice", excel_abc_desc: "List 1 (Proizvodi & Lokacije): Stupci A (Ime), B (Težina), C (Prodaja), D (Cijena). Lokacije iz stupaca E i F (ili s drugog lista) automatski se učitavaju.",
+                manual_prod_title: "Ručni unos proizvoda", lbl_prod_name: "Ime proizvoda", lbl_weight: "Težina (kg)", lbl_sales: "Prodaja (kom)", lbl_price: "Cijena (€)",
+                btn_add_prod: "Dodaj Proizvod", btn_run_abc: "Izvrši ABC Klasifikaciju (33% / 34% / 33%)", prepared_prods: "Uneseni proizvodi", lbl_sort_prods: "Sortiraj proizvode po:",
+                opt_sort_name_asc: "Naziv proizvoda (Abecedno)", opt_sort_comb: "Kombinirana Kategorija [Težina+Prodaja]", opt_sort_weight: "ABC Težina (A -> B -> C)", opt_sort_sales: "ABC Prodaja (A -> B -> C)", opt_sort_price: "ABC Cijena (A -> B -> C)",
+                col_prod: "Proizvod", col_cat_comb: "Kombinirana Kat. [Težina+Prodaja]", col_weight_abc: "Težina (kg) [ABC]", col_sales_abc: "Prodaja (kom) [ABC]", col_price_abc: "Cijena (€) [ABC]",
+                loc_search_title: "Pretraživanje & Unos Lokacija", lbl_loc_name: "Ime Lokacije (npr. C324D)", lbl_loc_group: "Grupa Lokacije", btn_add_loc: "Dodaj Lokaciju",
+                lbl_filter_group: "Grupa Lokacije", opt_all_groups: "-- Sve Grupe --", lbl_filter_letter: "1. Slovo Lokacije (A-Z)", opt_all_letters: "-- Sva Slova --", lbl_filter_level: "3. Broj (4. znak u imenu: 0-9)", opt_all_levels: "-- Svi Nivoi --",
+                loc_results: "Rezultati lokacija", col_loc_name: "Ime Lokacije", col_group: "Grupa", col_1st_letter: "1. Slovo", col_3rd_num: "3. Broj (4. Znak)",
+                nav_menu: "Izbornik", nav_timer: "Štoperica", msg_empty_prods: "Nema unesenih proizvoda za ABC analizu.", msg_enter_name: "Molimo unesite naziv proizvoda.", msg_enter_loc: "Molimo unesite ime lokacije (npr. C324D)."
+            }
+        };
+
+        let currentLang = sessionStorage.getItem('appLang') || 'en';
+        let products = [];
+        let locations = [];
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            sessionStorage.setItem('appLang', lang);
+
+            const btns = document.querySelectorAll('.lang-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(lang === 'en') btns[0]?.classList.add('active');
+            if(lang === 'nl') btns[1]?.classList.add('active');
+            if(lang === 'hr') btns[2]?.classList.add('active');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+            });
+        }
+
+        const letterSelect = document.getElementById('filterLetter');
+        for (let i = 65; i <= 90; i++) {
+            const letter = String.fromCharCode(i);
+            const opt = document.createElement('option');
+            opt.value = letter;
+            opt.innerText = letter;
+            letterSelect.appendChild(opt);
+        }
+
+        document.getElementById('excelFile').addEventListener('change', handleExcelUpload);
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                products = [];
+                locations = [];
+
+                const sheet1 = workbook.Sheets[workbook.SheetNames[0]];
+                if (sheet1) {
+                    const rows1 = XLSX.utils.sheet_to_json(sheet1, {header: 1});
+                    for (let i = 1; i < rows1.length; i++) {
+                        const r = rows1[i];
+                        if (r && r.length >= 4) {
+                            const name = String(r[0] || '').trim();
+                            const weight = parseFloat(r[1]) || 0;
+                            const sales = parseFloat(r[2]) || 0;
+                            const price = parseFloat(r[3]) || 0;
+                            if (name) products.push({ name, weight, sales, price, abcWeight: '', abcSales: '', abcPrice: '', combinedCat: '' });
+
+                            if (r.length >= 6) {
+                                const locName = String(r[4] || '').trim();
+                                const groupName = String(r[5] || '').trim();
+                                if (locName && groupName) {
+                                    locations.push({ name: locName, group: groupName });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (workbook.SheetNames.length > 1) {
+                    const sheet2 = workbook.Sheets[workbook.SheetNames[1]];
+                    const rows2 = XLSX.utils.sheet_to_json(sheet2, {header: 1});
+                    for (let i = 1; i < rows2.length; i++) {
+                        const r = rows2[i];
+                        if (r && r.length >= 2) {
+                            const locName = String(r[0] || '').trim();
+                            const group = String(r[1] || '').trim();
+                            if (locName) locations.push({ name: locName, group: group });
+                        }
+                    }
+                }
+
+                renderProductsTable();
+                filterLocations();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addManualProduct() {
+            const name = document.getElementById('prodName').value.trim();
+            const weight = parseFloat(document.getElementById('prodWeight').value) || 0;
+            const sales = parseFloat(document.getElementById('prodSales').value) || 0;
+            const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+
+            if (!name) {
+                alert(i18nData[currentLang].msg_enter_name);
+                return;
+            }
+
+            products.push({ name, weight, sales, price, abcWeight: '', abcSales: '', abcPrice: '', combinedCat: '' });
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodWeight').value = '';
+            document.getElementById('prodSales').value = '';
+            document.getElementById('prodPrice').value = '';
+
+            renderProductsTable();
+        }
+
+        function addManualLocation() {
+            const locName = document.getElementById('manualLocName').value.trim();
+            const group = document.getElementById('manualLocGroup').value;
+
+            if (!locName) {
+                alert(i18nData[currentLang].msg_enter_loc);
+                return;
+            }
+
+            locations.push({ name: locName, group: group });
+            document.getElementById('manualLocName').value = '';
+            filterLocations();
+        }
+
+        function renderProductsTable() {
+            const sortBy = document.getElementById('sortProductsBy').value;
+
+            products.sort((a, b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'combined') return (a.combinedCat || 'ZZ').localeCompare(b.combinedCat || 'ZZ');
+                if (sortBy === 'weight') return (a.abcWeight || 'Z').localeCompare(b.abcWeight || 'Z');
+                if (sortBy === 'sales') return (a.abcSales || 'Z').localeCompare(b.abcSales || 'Z');
+                if (sortBy === 'price') return (a.abcPrice || 'Z').localeCompare(b.abcPrice || 'Z');
+                return 0;
+            });
+
+            const tbody = document.querySelector('#productBufferTable tbody');
+            tbody.innerHTML = '';
+            document.getElementById('productCount').innerText = products.length;
+
+            products.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.combinedCat ? `<span class="badge badge-a" style="background:#e0f2fe; color:#0369a1; font-weight:bold;">${p.combinedCat}</span>` : '<em style="color:#94a3b8;">--</em>'}</td>
+                    <td>${p.weight} kg ${renderBadge(p.abcWeight)}</td>
+                    <td>${p.sales} ${renderBadge(p.abcSales)}</td>
+                    <td>${p.price.toFixed(2)} € ${renderBadge(p.abcPrice)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBadge(cat) {
+            if (!cat) return '';
+            return `<span class="badge badge-${cat.toLowerCase()}">${cat}</span>`;
+        }
+
+        function calculateABC() {
+            const N = products.length;
+            if (N === 0) {
+                alert(i18nData[currentLang].msg_empty_prods);
+                return;
+            }
+
+            let countA = Math.round(N * 0.33);
+            let countC = Math.round(N * 0.33);
+
+            if (N === 1) { countA = 1; countC = 0; }
+            else if (N === 2) { countA = 1; countC = 0; }
+
+            let countB = N - countA - countC;
+            if (countB < 0) countB = 0;
+
+            function assignCategory(property, resultKey) {
+                products.sort((a, b) => b[property] - a[property]);
+                products.forEach((p, index) => {
+                    if (index < countA) {
+                        p[resultKey] = 'A';
+                    } else if (index < countA + countB) {
+                        p[resultKey] = 'B';
+                    } else {
+                        p[resultKey] = 'C';
+                    }
+                });
+            }
+
+            assignCategory('weight', 'abcWeight');
+            assignCategory('sales', 'abcSales');
+            assignCategory('price', 'abcPrice');
+
+            products.forEach(p => {
+                p.combinedCat = `${p.abcWeight}${p.abcSales}`;
+            });
+
+            renderProductsTable();
+            filterLocations();
+        }
+
+        function filterLocations() {
+            const grp = document.getElementById('filterGroup').value;
+            const letter = document.getElementById('filterLetter').value;
+            const level = document.getElementById('filterLevel').value;
+
+            const tbody = document.querySelector('#locationResultsTable tbody');
+            tbody.innerHTML = '';
+
+            let count = 0;
+            locations.forEach(loc => {
+                const locName = loc.name.toUpperCase();
+                const locGrp = loc.group.toUpperCase();
+                const startLetter = locName.charAt(0);
+                const fourthChar = locName.length >= 4 ? locName.charAt(3) : '';
+
+                let matchGroup = !grp || locGrp === grp;
+                let matchLetter = !letter || startLetter === letter;
+                let matchLevel = !level || fourthChar === level;
+
+                if (matchGroup && matchLetter && matchLevel) {
+                    count++;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${loc.name}</strong></td>
+                        <td><span class="badge badge-a">${loc.group}</span></td>
+                        <td>${startLetter}</td>
+                        <td>${fourthChar}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            document.getElementById('locationCount').innerText = count;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>
