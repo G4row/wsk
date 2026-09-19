@@ -8,16 +8,15 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0284c7">
     <style>
-        /* Zaštita navigacije od Tiiny.host bannera na dnu */
         .nav-bar {
             position: fixed !important;
-            bottom: 40px !important;
+            bottom: 0 !important;
             left: 0;
             right: 0;
-            z-index: 99999 !important;
+            z-index: 1000 !important;
         }
         body {
-            padding-bottom: 120px !important;
+            padding-bottom: 70px !important;
         }
         .lang-switcher {
             display: flex;
@@ -47,7 +46,6 @@
             <h1 data-i18n="app_title">Warehouse Swiss Knife</h1>
             <p data-i18n="app_subtitle">Multi-tool Operations Assistant</p>
         </div>
-        <!-- Gumbi za jezik (prikazuju se ispravno i na Windowsima i na mobitelu) -->
         <div class="lang-switcher">
             <button class="lang-btn" onclick="setLanguage('en')">EN</button>
             <button class="lang-btn" onclick="setLanguage('nl')">NL</button>
@@ -93,6 +91,13 @@
                 <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="inventory_desc">Search inventory, filter 3rd number, and locate empty slots.</p>
                 <button class="btn btn-primary" onclick="goTo('inventory.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
             </div>
+
+            <!-- Novi alat: Generator Lokacija -->
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="gen_title">6. Location Generator</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="gen_desc">Generate LL-NN-L-N codes using ranges and export to Excel.</p>
+                <button class="btn btn-primary" onclick="goTo('locations.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
         </div>
     </div>
 
@@ -122,6 +127,10 @@
             <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
             Inventory
         </a>
+        <a href="javascript:goTo('locations.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span data-i18n="nav_gen">Generator</span>
+        </a>
     </nav>
 
     <script>
@@ -134,7 +143,8 @@
                 abc_title: "3. ABC Analysis", abc_desc: "Classify products (33/34/33%) and filter location groups.",
                 stopwatch_title: "4. Stopwatch", stopwatch_desc: "Time operational tasks, track laps, and export to Excel.",
                 inventory_title: "5. Inventory", inventory_desc: "Search inventory, filter 3rd number, and locate empty slots.",
-                btn_open: "Open Tool", nav_menu: "Menu", nav_timer: "Timer"
+                gen_title: "6. Location Generator", gen_desc: "Generate LL-NN-L-N codes using ranges and export to Excel.",
+                btn_open: "Open Tool", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
             },
             nl: {
                 app_title: "Magazijn Zwitsers Mes", app_subtitle: "Multi-tool Operationele Assistent",
@@ -144,21 +154,22 @@
                 abc_title: "3. ABC Analyse", abc_desc: "Classificeer producten (33/34/33%) en filter locaties.",
                 stopwatch_title: "4. Stopwatch", stopwatch_desc: "Meet operationele tijden en exporteer naar Excel.",
                 inventory_title: "5. Voorraad", inventory_desc: "Doorzoek voorraad en filter op 3e cijfer of lege plekken.",
-                btn_open: "Openen", nav_menu: "Menu", nav_timer: "Timer"
+                gen_title: "6. Locatie Generator", gen_desc: "Genereer LL-NN-L-N codes met bereiken en exporteer naar Excel.",
+                btn_open: "Openen", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
             },
             hr: {
                 app_title: "Skladišni Švicarski Nož", app_subtitle: "Glavni izbornik i pregled alata",
-                welcome_title: "Dobrodošli u Skladišnu Aplikaciju", welcome_desc: "Aplikacija nudi sve ključne sklopove za učinkovit rad u skladištu: izračun ostataka pakiranja, konsolidaciju i sortiranje picking linija, ABC analizu artikala s filtriranjem lokacija, mjerenje vremena (štopericu) te pretraživanje inventara.",
+                welcome_title: "Dobrodošli u Skladišnu Aplikaciju", welcome_desc: "Aplikacija nudi sve ključne sklopove za učinkovit rad u skladištu: izračun ostataka pakiranja, konsolidaciju i sortiranje picking linija, ABC analizu artikala s filtriranjem lokacija, mjerenje vremena (štopericu), pretraživanje inventara te generator lokacija.",
                 mod_title: "1. MOD (Ostatak)", mod_desc: "Izračun punih kutija i ostataka (modulo) iz ukupnih količina.",
                 picking_title: "2. Picking", picking_desc: "Zbroj količina istih artikala po linijama uz mogućnost sortiranja.",
                 abc_title: "3. ABC Klasifikacija", abc_desc: "Segmentacija proizvoda (33/34/33%) i pretraživanje lokacija.",
                 stopwatch_title: "4. Štoperica", stopwatch_desc: "Mjerenje vremena radnih operacija, prolaznih vremena i Excel izvoz.",
                 inventory_title: "5. Inventory", inventory_desc: "Pretraživanje inventara, 3. broja lokacije i praznih pozicija.",
-                btn_open: "Otvori Alat", nav_menu: "Izbornik", nav_timer: "Štoperica"
+                gen_title: "6. Generator Lokacija", gen_desc: "Generiranje oznaka po uzorku LL-NN-L-N i izvoz u Excel.",
+                btn_open: "Otvori Alat", nav_menu: "Izbornik", nav_timer: "Štoperica", nav_gen: "Generator"
             }
         };
 
-        // Korištenje localStorage radi stabilnijeg spremanja postavki
         let currentLang = localStorage.getItem('appLang') || sessionStorage.getItem('appLang') || 'hr';
 
         function setLanguage(lang) {
