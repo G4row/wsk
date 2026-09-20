@@ -16,7 +16,7 @@
             z-index: 1000 !important;
         }
         body {
-            padding-bottom: 70px !important;
+            padding-bottom: 75px !important;
         }
         .lang-switcher {
             display: flex;
@@ -92,11 +92,17 @@
                 <button class="btn btn-primary" onclick="goTo('inventory.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
             </div>
 
-            <!-- Novi alat: Generator Lokacija -->
             <div class="card" style="margin:0;">
                 <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="gen_title">6. Location Generator</h3>
                 <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="gen_desc">Generate LL-NN-L-N codes using ranges and export to Excel.</p>
                 <button class="btn btn-primary" onclick="goTo('locations.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
+            </div>
+
+            <!-- Novi alat: Operativni Obrazac (form.html) -->
+            <div class="card" style="margin:0;">
+                <h3 style="color:var(--primary); margin-bottom: 8px;" data-i18n="form_title">7. WMS Form</h3>
+                <p style="font-size: 0.85rem; color:#64748b; margin-bottom:12px;" data-i18n="form_desc">WMS operational checklist, time tracking & PDF export.</p>
+                <button class="btn btn-primary" onclick="goTo('form.html')" style="width:100%;" data-i18n="btn_open">Open Tool</button>
             </div>
         </div>
     </div>
@@ -131,6 +137,10 @@
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             <span data-i18n="nav_gen">Generator</span>
         </a>
+        <a href="javascript:goTo('form.html')" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span data-i18n="nav_form">Obrazac</span>
+        </a>
     </nav>
 
     <script>
@@ -144,7 +154,8 @@
                 stopwatch_title: "4. Stopwatch", stopwatch_desc: "Time operational tasks, track laps, and export to Excel.",
                 inventory_title: "5. Inventory", inventory_desc: "Search inventory, filter 3rd number, and locate empty slots.",
                 gen_title: "6. Location Generator", gen_desc: "Generate LL-NN-L-N codes using ranges and export to Excel.",
-                btn_open: "Open Tool", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
+                form_title: "7. WMS Operational Form", form_desc: "WMS operational checklist, time tracking & PDF export.",
+                btn_open: "Open Tool", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator", nav_form: "Form"
             },
             nl: {
                 app_title: "Magazijn Zwitsers Mes", app_subtitle: "Multi-tool Operationele Assistent",
@@ -155,18 +166,20 @@
                 stopwatch_title: "4. Stopwatch", stopwatch_desc: "Meet operationele tijden en exporteer naar Excel.",
                 inventory_title: "5. Voorraad", inventory_desc: "Doorzoek voorraad en filter op 3e cijfer of lege plekken.",
                 gen_title: "6. Locatie Generator", gen_desc: "Genereer LL-NN-L-N codes met bereiken en exporteer naar Excel.",
-                btn_open: "Openen", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
+                form_title: "7. WMS Formulier", form_desc: "Operationele controlelijst, tijdsregistratie en PDF-export.",
+                btn_open: "Openen", nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator", nav_form: "Formulier"
             },
             hr: {
                 app_title: "Skladišni Švicarski Nož", app_subtitle: "Glavni izbornik i pregled alata",
-                welcome_title: "Dobrodošli u Skladišnu Aplikaciju", welcome_desc: "Aplikacija nudi sve ključne sklopove za učinkovit rad u skladištu: izračun ostataka pakiranja, konsolidaciju i sortiranje picking linija, ABC analizu artikala s filtriranjem lokacija, mjerenje vremena (štopericu), pretraživanje inventara te generator lokacija.",
+                welcome_title: "Dobrodošli u Skladišnu Aplikaciju", welcome_desc: "Aplikacija nudi sve ključne sklopove za učinkovit rad u skladištu: izračun ostataka pakiranja, konsolidaciju i sortiranje picking linija, ABC analizu artikala s filtriranjem lokacija, mjerenje vremena (štopericu), pretraživanje inventara, generator lokacija te WMS operativni obrazac.",
                 mod_title: "1. MOD (Ostatak)", mod_desc: "Izračun punih kutija i ostataka (modulo) iz ukupnih količina.",
                 picking_title: "2. Picking", picking_desc: "Zbroj količina istih artikala po linijama uz mogućnost sortiranja.",
                 abc_title: "3. ABC Klasifikacija", abc_desc: "Segmentacija proizvoda (33/34/33%) i pretraživanje lokacija.",
                 stopwatch_title: "4. Štoperica", stopwatch_desc: "Mjerenje vremena radnih operacija, prolaznih vremena i Excel izvoz.",
                 inventory_title: "5. Inventory", inventory_desc: "Pretraživanje inventara, 3. broja lokacije i praznih pozicija.",
                 gen_title: "6. Generator Lokacija", gen_desc: "Generiranje oznaka po uzorku LL-NN-L-N i izvoz u Excel.",
-                btn_open: "Otvori Alat", nav_menu: "Izbornik", nav_timer: "Štoperica", nav_gen: "Generator"
+                form_title: "7. WMS Operativni Obrazac", form_desc: "Praćenje vremena, odgovornosti, kontrolna lista i PDF ispis.",
+                btn_open: "Otvori Alat", nav_menu: "Izbornik", nav_timer: "Štoperica", nav_gen: "Generator", nav_form: "Obrazac"
             }
         };
 
