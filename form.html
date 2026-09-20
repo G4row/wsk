@@ -6,7 +6,7 @@
   <title>Warehouse Management System - Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Navigation bar styles matching main app */
+    /* Navigacijska traka za ekrane */
     .nav-bar {
       position: fixed !important;
       bottom: 0 !important;
@@ -41,190 +41,241 @@
       fill: currentColor;
     }
 
-    /* Printing Rules: Hide navigation and keep Dutch format */
+    /* Pravila za ispis (Print/PDF): Točno 2 stranice na nizozemskom */
     @media print {
       .no-print, .nav-bar { display: none !important; }
-      body { background: white !important; font-size: 11px; color: black !important; padding-bottom: 0 !important; }
+      body { background: white !important; font-size: 9.5px !important; color: black !important; padding: 0 !important; margin: 0 !important; }
       .page-break { page-break-before: always; }
-      input, select, textarea { border: 1px solid #9ca3af !important; background: transparent !important; color: black !important; }
+      input, select, textarea { border: 1px solid #9ca3af !important; background: transparent !important; color: black !important; padding: 1px !important; }
+      .card-box { border: 1px solid #cbd5e1 !important; padding: 10px !important; box-shadow: none !important; border-radius: 0 !important; }
 
       .lang-text { display: none !important; }
       .lang-nl-print { display: inline !important; }
+      
+      table th, table td { padding: 2px 4px !important; font-size: 9px !important; }
     }
 
-    /* Screen display rules */
+    /* Prikaz na ekranu */
     @media screen {
       body { padding-bottom: 80px !important; }
       .lang-nl-print { display: none; }
+      table th, table td { padding: 3px 6px; }
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans p-4 md:p-8">
+<body class="bg-gray-100 text-gray-800 font-sans p-2 md:p-6">
 
   <!-- Control Header (Language Switcher & Print Button) -->
-  <div class="max-w-4xl mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 bg-white p-4 rounded-lg shadow no-print">
+  <div class="max-w-4xl mx-auto mb-4 flex flex-wrap justify-between items-center gap-4 bg-white p-3 rounded-lg shadow no-print">
     <div class="flex items-center space-x-2">
-      <span class="font-bold text-sm text-gray-700">Jezik / Language / Taal:</span>
-      <select id="langSelect" onchange="changeLanguage(this.value)" class="border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500">
+      <span class="font-bold text-xs text-gray-700">Jezik / Language / Taal:</span>
+      <select id="langSelect" onchange="changeLanguage(this.value)" class="border border-gray-300 rounded px-2 py-1 text-xs bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500">
         <option value="hr" selected>Hrvatski (HR)</option>
         <option value="en">English (EN)</option>
         <option value="nl">Nederlands (NL)</option>
       </select>
     </div>
     
-    <button onclick="window.print()" class="px-5 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition flex items-center gap-2 shadow">
-      🖨️ <span class="lang-text hr">Ispiši / Spremi u PDF (NL)</span>
-         <span class="lang-text en hidden">Print / Save as PDF (NL)</span>
-         <span class="lang-text nl hidden">Afdrukken / Opslaan als PDF (NL)</span>
+    <button onclick="window.print()" class="px-4 py-1.5 bg-blue-600 text-white font-bold text-xs rounded hover:bg-blue-700 transition flex items-center gap-2 shadow">
+      🖨️ <span class="lang-text hr">Ispiši / Spremi u PDF (2 Stranice - NL)</span>
+         <span class="lang-text en hidden">Print / Save as PDF (2 Pages - NL)</span>
+         <span class="lang-text nl hidden">Afdrukken / Opslaan als PDF (2 Pagina's - NL)</span>
     </button>
   </div>
 
-  <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow border border-gray-300">
+  <div class="max-w-4xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow border border-gray-300 card-box">
 
-    <!-- Header Section -->
-    <div class="flex justify-between items-start border-b-2 border-gray-800 pb-4 mb-6">
-      <div>
-        <span class="text-xs text-gray-400 font-bold uppercase">
-          <span class="lang-text hr">DEMO PREZENTACIJA</span>
-          <span class="lang-text en hidden">DEMO PRESENTATION</span>
-          <span class="lang-text nl hidden">DEMO PRESENTATIE</span>
-          <span class="lang-nl-print">DEMO PRESENTATIE</span>
-        </span>
-        <h1 class="text-2xl font-black text-slate-800 tracking-tight">
-          <span class="lang-text hr">SKLADIŠNI OPERATIVNI OBRAZAC</span>
-          <span class="lang-text en hidden">WAREHOUSE OPERATIONAL FORM</span>
-          <span class="lang-text nl hidden">MAGAZIJN OPERATIONEEL FORMULIER</span>
-          <span class="lang-nl-print">MAGAZIJN OPERATIONEEL FORMULIER</span>
-        </h1>
-      </div>
-      <div class="text-right">
-        <span class="text-xl font-black tracking-widest text-slate-400 block leading-none">LOGISTICS</span>
-        <span class="text-xs text-gray-400 font-bold tracking-wider">MANAGEMENT</span>
-      </div>
-    </div>
-
-    <!-- PART I: Time Tracking Table -->
-    <section class="mb-8">
-      <div class="border-b pb-2 mb-3">
-        <h2 class="text-md font-bold text-slate-800 uppercase">
-          <span class="lang-text hr">1. Praćenje vremena i odgovornosti</span>
-          <span class="lang-text en hidden">1. Time & Responsibility Tracking</span>
-          <span class="lang-text nl hidden">1. Tijds- en Verantwoordelijkheidsregistratie</span>
-          <span class="lang-nl-print">1. Tijds- en Verantwoordelijkheidsregistratie</span>
-        </h2>
-      </div>
-
-      <table class="w-full border-collapse border border-gray-300 text-sm">
-        <thead>
-          <tr class="bg-slate-100">
-            <th class="border border-gray-300 p-2 text-left">
-              <span class="lang-text hr">Faza / Zadatak</span>
-              <span class="lang-text en hidden">Phase / Task</span>
-              <span class="lang-text nl hidden">Fase / Taak</span>
-              <span class="lang-nl-print">Fase / Taak</span>
-            </th>
-            <th class="border border-gray-300 p-2 text-left w-1/2">
-              <span class="lang-text hr">Datum / Ime</span>
-              <span class="lang-text en hidden">Date / Name</span>
-              <span class="lang-text nl hidden">Datum / Naam</span>
-              <span class="lang-nl-print">Datum / Naam</span>
-            </th>
-            <th class="border border-gray-300 p-2 text-center w-36">
-              <span class="lang-text hr">Utrošeno vrijeme</span>
-              <span class="lang-text en hidden">Time Spent</span>
-              <span class="lang-text nl hidden">Tijd besteedt</span>
-              <span class="lang-nl-print">Tijd besteedt</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr>
-            <td class="border p-2 font-medium">1) <span class="lang-text hr">Barkodove skenirao</span><span class="lang-text en hidden">Barcodes scanned by</span><span class="lang-text nl hidden">Barcodes gescand door</span><span class="lang-nl-print">Barcodes gescand door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">2) <span class="lang-text hr">Narudžbu prikupio (picking)</span><span class="lang-text en hidden">Order picked by</span><span class="lang-text nl hidden">Orderpicking door</span><span class="lang-nl-print">Orderpicking door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">3) <span class="lang-text hr">Narudžbu složio / sastavio</span><span class="lang-text en hidden">Order built up by</span><span class="lang-text nl hidden">Order opgebouwd door</span><span class="lang-nl-print">Order opgebouwd door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">
-              4) <span class="lang-text hr">Narudžbu provjerio</span><span class="lang-text en hidden">Order checked by</span><span class="lang-text nl hidden">Order gecheckt door</span><span class="lang-nl-print">Order gecheckt door</span>
-              <div class="mt-1 text-xs font-normal">
-                <span class="lang-text hr">Pripremljeno na / Količina:</span>
-                <span class="lang-text en hidden">Set ready on / Quantity:</span>
-                <span class="lang-text nl hidden">Klaargezet op / Aantal:</span>
-                <span class="lang-nl-print">KLAARGEZET OP/AANTAL:</span>
-                <input type="text" class="border border-gray-400 p-0.5 rounded w-28 text-xs ml-1">
-              </div>
-            </td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">5) <span class="lang-text hr">Narudžbu utovario</span><span class="lang-text en hidden">Order loaded by</span><span class="lang-text nl hidden">Order geladen door</span><span class="lang-nl-print">Order geladen door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">6) <span class="lang-text hr">Teret osigurao / učvrstio</span><span class="lang-text en hidden">Cargo secured by</span><span class="lang-text nl hidden">Afgestuwd door</span><span class="lang-nl-print">Afgestuwd door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">7) <span class="lang-text hr">Osiguranje tereta provjerio (Skladište)</span><span class="lang-text en hidden">Stowage checked by (Warehouse)</span><span class="lang-text nl hidden">Stuwage gecontroleerd door (Loods)</span><span class="lang-nl-print">Stuwage gecontroleerd door (Loods)</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">8) <span class="lang-text hr">Osiguranje tereta provjerio (Ured)</span><span class="lang-text en hidden">Stowage checked by (Office)</span><span class="lang-text nl hidden">Stuwage gecontroleerd door (Kantoor)</span><span class="lang-nl-print">Stuwage gecontroleerd door (Kantoor)</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-          <tr>
-            <td class="border p-2 font-medium">9) <span class="lang-text hr">Fotografije provjerio</span><span class="lang-text en hidden">Photos checked by</span><span class="lang-text nl hidden">Foto's gecheckt door</span><span class="lang-nl-print">Foto's gecheckt door</span></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 border-0 focus:ring-0"></td>
-            <td class="border p-1"><input type="text" class="w-full p-1 text-center border-0 focus:ring-0"></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- Page Break for Printing -->
-    <div class="page-break"></div>
-
-    <!-- PART II: Detailed Checklist Table -->
-    <section>
-      <div class="flex justify-between items-center border-b pb-2 mb-3">
-        <h2 class="text-md font-bold text-slate-800 uppercase">
-          <span class="lang-text hr">2. Kontrolna lista aktivnosti</span>
-          <span class="lang-text en hidden">2. Activity Checklist</span>
-          <span class="lang-text nl hidden">2. Activiteiten Controlelijst</span>
-          <span class="lang-nl-print">2. Activiteiten Controlelijst</span>
-        </h2>
-        <div class="text-sm font-bold">
-          DOSSIER: <input type="text" class="border border-gray-400 p-1 rounded w-40 text-sm">
+    <!-- ================= STRANICA 1: DOSSIER (BROJ NARUDŽBE) & PRAĆENJE VREMENA ================= -->
+    <div>
+      <!-- Header Section -->
+      <div class="flex justify-between items-start border-b-2 border-gray-800 pb-2 mb-3">
+        <div>
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+            <span class="lang-text hr">DEMO PREZENTACIJA</span>
+            <span class="lang-text en hidden">DEMO PRESENTATION</span>
+            <span class="lang-text nl hidden">DEMO PRESENTATIE</span>
+            <span class="lang-nl-print">DEMO PRESENTATIE</span>
+          </span>
+          <h1 class="text-xl font-black text-slate-800 tracking-tight">
+            <span class="lang-text hr">UPITNIK O POŠILJCI / DOSSIER</span>
+            <span class="lang-text en hidden">SHIPMENT DOSSIER & ORDER INQUIRY</span>
+            <span class="lang-text nl hidden">ZENDING DOSSIER & ORDER VRAGENLIJST</span>
+            <span class="lang-nl-print">ZENDING DOSSIER & ORDER VRAGENLIJST</span>
+          </h1>
+        </div>
+        <div class="text-right">
+          <span class="text-lg font-black tracking-widest text-slate-400 block leading-none">LOGISTICS</span>
+          <span class="text-[9px] text-gray-400 font-bold tracking-wider">MANAGEMENT</span>
         </div>
       </div>
 
-      <table class="w-full text-left border-collapse border border-gray-300 text-sm">
+      <!-- DOSSIER BR. (Broj narudžbe) na samom vrhu -->
+      <div class="mb-4 bg-slate-100 p-3 rounded-lg border-2 border-slate-300">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="font-black text-slate-800 block text-sm mb-1">
+              <span class="lang-text hr">DOSSIER BR. / BROJ NARUDŽBE:</span>
+              <span class="lang-text en hidden">DOSSIER NO. / ORDER NUMBER:</span>
+              <span class="lang-text nl hidden">DOSSIER NR. / ORDERNUMMER:</span>
+              <span class="lang-nl-print">DOSSIER NR. / ORDERNUMMER:</span>
+            </label>
+            <input type="text" class="w-full border-2 border-blue-600 rounded p-1.5 bg-white font-bold text-sm text-slate-900">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="font-bold text-gray-700 block text-[11px]">
+                <span class="lang-text hr">DATUM:</span>
+                <span class="lang-text en hidden">DATE:</span>
+                <span class="lang-text nl hidden">DATUM:</span>
+                <span class="lang-nl-print">DATUM:</span>
+              </label>
+              <input type="date" class="w-full border border-gray-400 rounded p-1 bg-white text-xs">
+            </div>
+            <div>
+              <label class="font-bold text-gray-700 block text-[11px]">
+                <span class="lang-text hr">KLIJENT:</span>
+                <span class="lang-text en hidden">CUSTOMER:</span>
+                <span class="lang-text nl hidden">KLANT:</span>
+                <span class="lang-nl-print">KLANT:</span>
+              </label>
+              <input type="text" class="w-full border border-gray-400 rounded p-1 bg-white text-xs">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PART I: Time & Responsibility Tracking Table -->
+      <section class="mb-4">
+        <div class="border-b pb-1 mb-2">
+          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wide">
+            <span class="lang-text hr">1. Praćenje vremena i odgovornosti</span>
+            <span class="lang-text en hidden">1. Time & Responsibility Tracking</span>
+            <span class="lang-text nl hidden">1. Tijds- en Verantwoordelijkheidsregistratie</span>
+            <span class="lang-nl-print">1. Tijds- en Verantwoordelijkheidsregistratie</span>
+          </h2>
+        </div>
+
+        <table class="w-full border-collapse border border-gray-300 text-xs">
+          <thead>
+            <tr class="bg-slate-100 font-bold">
+              <th class="border border-gray-300 p-1.5 text-left">
+                <span class="lang-text hr">Faza / Zadatak</span>
+                <span class="lang-text en hidden">Phase / Task</span>
+                <span class="lang-text nl hidden">Fase / Taak</span>
+                <span class="lang-nl-print">Fase / Taak</span>
+              </th>
+              <th class="border border-gray-300 p-1.5 text-left w-1/2">
+                <span class="lang-text hr">Datum / Ime radnika</span>
+                <span class="lang-text en hidden">Date / Name</span>
+                <span class="lang-text nl hidden">Datum / Naam</span>
+                <span class="lang-nl-print">Datum / Naam</span>
+              </th>
+              <th class="border border-gray-300 p-1.5 text-center w-28">
+                <span class="lang-text hr">Utrošeno vrijeme</span>
+                <span class="lang-text en hidden">Time Spent</span>
+                <span class="lang-text nl hidden">Tijd besteedt</span>
+                <span class="lang-nl-print">Tijd besteedt</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="border p-1 font-medium">1) <span class="lang-text hr">Barkodove skenirao</span><span class="lang-text en hidden">Barcodes scanned by</span><span class="lang-text nl hidden">Barcodes gescand door</span><span class="lang-nl-print">Barcodes gescand door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">2) <span class="lang-text hr">Narudžbu prikupio (picking)</span><span class="lang-text en hidden">Order picked by</span><span class="lang-text nl hidden">Orderpicking door</span><span class="lang-nl-print">Orderpicking door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">3) <span class="lang-text hr">Narudžbu složio / sastavio</span><span class="lang-text en hidden">Order built up by</span><span class="lang-text nl hidden">Order opgebouwd door</span><span class="lang-nl-print">Order opgebouwd door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">
+                4) <span class="lang-text hr">Narudžbu provjerio</span><span class="lang-text en hidden">Order checked by</span><span class="lang-text nl hidden">Order gecheckt door</span><span class="lang-nl-print">Order gecheckt door</span>
+                <div class="mt-0.5 text-[10px] font-normal">
+                  <span class="lang-text hr">Pripremljeno na / Količina:</span>
+                  <span class="lang-text en hidden">Set ready on / Quantity:</span>
+                  <span class="lang-text nl hidden">Klaargezet op / Aantal:</span>
+                  <span class="lang-nl-print">KLAARGEZET OP/AANTAL:</span>
+                  <input type="text" class="border border-gray-400 p-0.5 rounded w-24 text-[10px] ml-1">
+                </div>
+              </td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">5) <span class="lang-text hr">Narudžbu utovario</span><span class="lang-text en hidden">Order loaded by</span><span class="lang-text nl hidden">Order geladen door</span><span class="lang-nl-print">Order geladen door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">6) <span class="lang-text hr">Teret osigurao / učvrstio</span><span class="lang-text en hidden">Cargo secured by</span><span class="lang-text nl hidden">Afgestuwd door</span><span class="lang-nl-print">Afgestuwd door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">7) <span class="lang-text hr">Osiguranje tereta provjerio (Skladište)</span><span class="lang-text en hidden">Stowage checked by (Warehouse)</span><span class="lang-text nl hidden">Stuwage gecontroleerd door (Loods)</span><span class="lang-nl-print">Stuwage gecontroleerd door (Loods)</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">8) <span class="lang-text hr">Osiguranje tereta provjerio (Ured)</span><span class="lang-text en hidden">Stowage checked by (Office)</span><span class="lang-text nl hidden">Stuwage gecontroleerd door (Kantoor)</span><span class="lang-nl-print">Stuwage gecontroleerd door (Kantoor)</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+            <tr>
+              <td class="border p-1 font-medium">9) <span class="lang-text hr">Fotografije provjerio</span><span class="lang-text en hidden">Photos checked by</span><span class="lang-text nl hidden">Foto's gecheckt door</span><span class="lang-nl-print">Foto's gecheckt door</span></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 border-0 focus:ring-0 text-xs"></td>
+              <td class="border p-0.5"><input type="text" class="w-full p-0.5 text-center border-0 focus:ring-0 text-xs"></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Napomene / Posebne upute pošiljke -->
+      <div class="border border-gray-300 p-2 rounded bg-slate-50 text-xs">
+        <label class="font-bold text-gray-700 block mb-1">
+          <span class="lang-text hr">Napomene skladišta / Posebne upute pošiljke:</span>
+          <span class="lang-text en hidden">Warehouse remarks / Special instructions:</span>
+          <span class="lang-text nl hidden">Opmerkingen / Speciale instructies:</span>
+          <span class="lang-nl-print">Opmerkingen / Speciale instructies:</span>
+        </label>
+        <textarea rows="3" class="w-full border border-gray-300 rounded p-1 bg-white text-xs"></textarea>
+      </div>
+    </div>
+
+    <!-- PREKID STRANICE ZA ISPIS / PDF (Prijelaz na 2. stranicu) -->
+    <div class="page-break"></div>
+
+    <!-- ================= STRANICA 2: KONTROLNA LISTA I POTPISI RADNIKA ================= -->
+    <div class="mt-4 md:mt-0">
+      <div class="flex justify-between items-center border-b-2 border-gray-800 pb-2 mb-3">
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide">
+          <span class="lang-text hr">2. Kontrolna lista aktivnosti & Potpisi radnika</span>
+          <span class="lang-text en hidden">2. Activity Checklist & Worker Signatures</span>
+          <span class="lang-text nl hidden">2. Activiteiten Controlelijst & Handtekeningen</span>
+          <span class="lang-nl-print">2. Activiteiten Controlelijst & Handtekeningen</span>
+        </h2>
+        <span class="text-xs text-gray-400 font-bold">STRANICA 2 / PAGE 2</span>
+      </div>
+
+      <table class="w-full text-left border-collapse border border-gray-300 text-[10.5px]">
         <thead>
-          <tr class="bg-slate-100">
-            <th class="border border-gray-300 p-2">
+          <tr class="bg-slate-100 font-bold">
+            <th class="border border-gray-300 p-1">
               <span class="lang-text hr">Stavka / Zadatak</span>
               <span class="lang-text en hidden">Item / Task</span>
               <span class="lang-text nl hidden">Omschrijving / Taak</span>
               <span class="lang-nl-print">Omschrijving / Taak</span>
             </th>
-            <th class="border border-gray-300 p-2 text-center w-10">J</th>
-            <th class="border border-gray-300 p-2 text-center w-10">N</th>
-            <th class="border border-gray-300 p-2 w-32">
+            <th class="border border-gray-300 p-1 text-center w-8">J</th>
+            <th class="border border-gray-300 p-1 text-center w-8">N</th>
+            <th class="border border-gray-300 p-1 w-28">
               <span class="lang-text hr">KOLIČINA</span>
               <span class="lang-text en hidden">QUANTITY</span>
               <span class="lang-text nl hidden">AANTAL</span>
@@ -235,217 +286,191 @@
         <tbody class="divide-y divide-gray-200">
           
           <!-- I. ORDERPICKING -->
-          <tr class="bg-slate-200 font-bold">
+          <tr class="bg-slate-200 font-bold text-xs">
             <td colspan="4" class="p-1 pl-2">I. ORDERPICKING</td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Ručni prikup &lt;23 kg</span><span class="lang-text en hidden">Hand picking &lt;23 kg</span><span class="lang-text nl hidden">Hand picken &lt;23 kg</span><span class="lang-nl-print">Hand picken &lt;23 kg:</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Ručni prikup &lt;23 kg</span><span class="lang-text en hidden">Hand picking &lt;23 kg</span><span class="lang-text nl hidden">Hand picken &lt;23 kg</span><span class="lang-nl-print">Hand picken &lt;23 kg:</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Ručni prikup &lt;46 kg</span><span class="lang-text en hidden">Hand picking &lt;46 kg</span><span class="lang-text nl hidden">Hand picken &lt;46 kg</span><span class="lang-nl-print">Hand picken &lt;46 kg:</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Ručni prikup &lt;46 kg</span><span class="lang-text en hidden">Hand picking &lt;46 kg</span><span class="lang-text nl hidden">Hand picken &lt;46 kg</span><span class="lang-nl-print">Hand picken &lt;46 kg:</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Ručni prikup &gt;46 kg</span><span class="lang-text en hidden">Hand picking &gt;46 kg</span><span class="lang-text nl hidden">Hand picken &gt;46 kg</span><span class="lang-nl-print">Hand picken &gt;46 kg:</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Ručni prikup &gt;46 kg</span><span class="lang-text en hidden">Hand picking &gt;46 kg</span><span class="lang-text nl hidden">Hand picken &gt;46 kg</span><span class="lang-nl-print">Hand picken &gt;46 kg:</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr class="bg-gray-50 border-b-2">
-            <td class="p-1 pl-4 italic text-xs">
-              <span class="lang-text hr">Popunio:</span><span class="lang-text en hidden">Filled in by:</span><span class="lang-text nl hidden">Ingevuld door:</span><span class="lang-nl-print">Ingevuld door:</span>
+            <td class="p-1 pl-3 italic text-[10px] font-bold">
+              <span class="lang-text hr">Popunio / Potpis radnika:</span><span class="lang-text en hidden">Filled / Signature worker:</span><span class="lang-text nl hidden">Ingevuld / Handtekening:</span><span class="lang-nl-print">Ingevuld / Handtekening:</span>
             </td>
-            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
+            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-[10px]"></td>
           </tr>
 
           <!-- II. KLAARZETTEN -->
-          <tr class="bg-slate-200 font-bold">
+          <tr class="bg-slate-200 font-bold text-xs">
             <td colspan="4" class="p-1 pl-2">II. KLAARZETTEN</td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Rukom rukovano radi slaganja</span><span class="lang-text en hidden">Handled by hand to build up</span><span class="lang-text nl hidden">Vastgehad om op te bouwen</span><span class="lang-nl-print">Vastgehad om op te bouwen:</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Rukom rukovano radi slaganja</span><span class="lang-text en hidden">Handled by hand to build up</span><span class="lang-text nl hidden">Vastgehad om op te bouwen</span><span class="lang-nl-print">Vastgehad om op te bouwen:</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Palete stegnute stezaljkom</span><span class="lang-text en hidden">Pallets clamped</span><span class="lang-text nl hidden">Pallets geklemd</span><span class="lang-nl-print">Pallets geklemd:</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Palete stegnute stezaljkom</span><span class="lang-text en hidden">Pallets clamped</span><span class="lang-text nl hidden">Pallets geklemd</span><span class="lang-nl-print">Pallets geklemd:</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4">
-              <span class="lang-text hr">Palete omotane folijom <span class="text-xs text-gray-500">(velika, gornja, crna itd.)</span></span>
-              <span class="lang-text en hidden">Pallets wrapped <span class="text-xs text-gray-500">(large wrap, top wraps, black etc.)</span></span>
-              <span class="lang-text nl hidden">Pallets gewikkeld <span class="text-xs text-gray-500">(grote wikkel, topwikkels, zwart etc.)</span></span>
-              <span class="lang-nl-print">Pallets gewikkeld (Graag noteren, grote wikkel, topwikkels, zwart etc.):</span>
+            <td class="p-0.5 pl-3">
+              <span class="lang-text hr">Palete omotane folijom <span class="text-[9px] text-gray-500">(velika, gornja, crna)</span></span>
+              <span class="lang-text en hidden">Pallets wrapped <span class="text-[9px] text-gray-500">(large wrap, top, black)</span></span>
+              <span class="lang-text nl hidden">Pallets gewikkeld <span class="text-[9px] text-gray-500">(grote wikkel, top, zwart)</span></span>
+              <span class="lang-nl-print">Pallets gewikkeld (grote wikkel, top, zwart):</span>
             </td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Upotrijebljene trake za vezivanje</span><span class="lang-text en hidden">Straps / bands used</span><span class="lang-text nl hidden">Straps / bandjes gebruikt</span><span class="lang-nl-print">Straps / bandjes gebruikt</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Upotrijebljene trake za vezivanje</span><span class="lang-text en hidden">Straps / bands used</span><span class="lang-text nl hidden">Straps / bandjes gebruikt</span><span class="lang-nl-print">Straps / bandjes gebruikt</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4">
-              <span class="lang-text hr">Postavljene etikete <span class="text-xs text-gray-500">(A4, adresa, ADR)</span></span>
-              <span class="lang-text en hidden">Labels applied <span class="text-xs text-gray-500">(A4, address, ADR)</span></span>
-              <span class="lang-text nl hidden">Labels aangebracht <span class="text-xs text-gray-500">(A4, adres, ADR)</span></span>
-              <span class="lang-nl-print">Labels aangebracht (Graag noteren wat voor labels, A4, adres, ADR):</span>
+            <td class="p-0.5 pl-3">
+              <span class="lang-text hr">Postavljene etikete <span class="text-[9px] text-gray-500">(A4, adresa, ADR)</span></span>
+              <span class="lang-text en hidden">Labels applied <span class="text-[9px] text-gray-500">(A4, address, ADR)</span></span>
+              <span class="lang-text nl hidden">Labels aangebracht <span class="text-[9px] text-gray-500">(A4, adres, ADR)</span></span>
+              <span class="lang-nl-print">Labels aangebracht (A4, adres, ADR):</span>
             </td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Etikete uklonjene / broj paleta</span><span class="lang-text en hidden">Labels removed / number of pallets</span><span class="lang-text nl hidden">Labels verwijderd / aantal pallets</span><span class="lang-nl-print">Labels verwijderd/aantal pallets</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Etikete uklonjene / broj paleta</span><span class="lang-text en hidden">Labels removed / number of pallets</span><span class="lang-text nl hidden">Labels verwijderd / aantal pallets</span><span class="lang-nl-print">Labels verwijderd/aantal pallets</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4">
-              <span class="lang-text hr">Standardne palete korištene <span class="text-xs text-gray-500">(prave, lažne, vrsta)</span></span>
-              <span class="lang-text en hidden">Standard pallets used <span class="text-xs text-gray-500">(real, fake, type)</span></span>
-              <span class="lang-text nl hidden">Standaard pallets gebruikt <span class="text-xs text-gray-500">(echt, nep, soort)</span></span>
-              <span class="lang-nl-print">Standaard pallets gebruikt (Graag noteren wat voor pallets, echt, nep, soort):</span>
+            <td class="p-0.5 pl-3">
+              <span class="lang-text hr">Standardne palete korištene <span class="text-[9px] text-gray-500">(prave, lažne)</span></span>
+              <span class="lang-text en hidden">Standard pallets used <span class="text-[9px] text-gray-500">(real, fake)</span></span>
+              <span class="lang-text nl hidden">Standaard pallets gebruikt <span class="text-[9px] text-gray-500">(echt, nep)</span></span>
+              <span class="lang-nl-print">Standaard pallets gebruikt (echt, nep):</span>
             </td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Palete kupca korištene</span><span class="lang-text en hidden">Customer pallets used</span><span class="lang-text nl hidden">Pallets van de klant gebruikt</span><span class="lang-nl-print">Pallets van de klant gebruikt</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Palete kupca korištene</span><span class="lang-text en hidden">Customer pallets used</span><span class="lang-text nl hidden">Pallets van de klant gebruikt</span><span class="lang-nl-print">Pallets van de klant gebruikt</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Skenirani barkodovi / broj QR kodova</span><span class="lang-text en hidden">Barcodes scanned or QR codes count</span><span class="lang-text nl hidden">Barcodes gescand of aantal QR codes</span><span class="lang-nl-print">Barcodes gescand of aantal QR codes</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Skenirani barkodovi / broj QR kodova</span><span class="lang-text en hidden">Barcodes scanned or QR codes count</span><span class="lang-text nl hidden">Barcodes gescand of aantal QR codes</span><span class="lang-nl-print">Barcodes gescand of aantal QR codes</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Korištene prazne kutije</span><span class="lang-text en hidden">Empty boxes used</span><span class="lang-text nl hidden">Lege dozen gebruikt</span><span class="lang-nl-print">Lege dozen gebruikt</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Korištene prazne kutije / vrećice</span><span class="lang-text en hidden">Empty boxes / pouches used</span><span class="lang-text nl hidden">Lege dozen / zakken gebruikt</span><span class="lang-nl-print">Lege dozen / zakken gebruikt</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Korištene samoljepljive vrećice</span><span class="lang-text en hidden">Document pouches used</span><span class="lang-text nl hidden">Plakzakken gebruikt</span><span class="lang-nl-print">Plakzakken gebruikt</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr class="bg-gray-50 border-b-2">
-            <td class="p-1 pl-4 italic text-xs">
-              <span class="lang-text hr">Popunio:</span><span class="lang-text en hidden">Filled in by:</span><span class="lang-text nl hidden">Ingevuld door:</span><span class="lang-nl-print">Ingevuld door:</span>
+            <td class="p-1 pl-3 italic text-[10px] font-bold">
+              <span class="lang-text hr">Popunio / Potpis radnika:</span><span class="lang-text en hidden">Filled / Signature worker:</span><span class="lang-text nl hidden">Ingevuld / Handtekening:</span><span class="lang-nl-print">Ingevuld / Handtekening:</span>
             </td>
-            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
+            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-[10px]"></td>
           </tr>
 
           <!-- III. LADEN -->
-          <tr class="bg-slate-200 font-bold">
+          <tr class="bg-slate-200 font-bold text-xs">
             <td colspan="4" class="p-1 pl-2">III. LADEN</td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Palete utovarene</span><span class="lang-text en hidden">Pallets loaded</span><span class="lang-text nl hidden">Pallets geladen</span><span class="lang-nl-print">Pallets geladen</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Palete utovarene</span><span class="lang-text en hidden">Pallets loaded</span><span class="lang-text nl hidden">Pallets geladen</span><span class="lang-nl-print">Pallets geladen</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Palete utovarene stezaljkom</span><span class="lang-text en hidden">Pallets loaded with clamp</span><span class="lang-text nl hidden">Pallets geladen met de klem</span><span class="lang-nl-print">Pallets geladen met de klem</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Palete utovarene stezaljkom</span><span class="lang-text en hidden">Pallets loaded with clamp</span><span class="lang-text nl hidden">Pallets geladen met de klem</span><span class="lang-nl-print">Pallets geladen met de klem</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Pojedinačni kartoni utovareni</span><span class="lang-text en hidden">Loose cartons loaded</span><span class="lang-text nl hidden">Losse cartons geladen</span><span class="lang-nl-print">Losse cartons geladen</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Pojedinačni kartoni utovareni</span><span class="lang-text en hidden">Loose cartons loaded</span><span class="lang-text nl hidden">Losse cartons geladen</span><span class="lang-nl-print">Losse cartons geladen</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Ručno utovaren 20ft kontejner</span><span class="lang-text en hidden">20ft manual loading</span><span class="lang-text nl hidden">20ft handwerk geladen</span><span class="lang-nl-print">20ft handwerk geladen</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Ručno utovaren 20ft / 40ft kontejner</span><span class="lang-text en hidden">20ft / 40ft manual loading</span><span class="lang-text nl hidden">20ft / 40ft handwerk geladen</span><span class="lang-nl-print">20ft / 40ft handwerk geladen</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Ručno utovaren 40ft kontejner</span><span class="lang-text en hidden">40ft manual loading</span><span class="lang-text nl hidden">40ft handwerk geladen</span><span class="lang-nl-print">40ft handwerk geladen</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Materijal za osiguranje (grede, ploče, jastuci)</span><span class="lang-text en hidden">Stow material (beams, boards, bags)</span><span class="lang-text nl hidden">Stuw material (balken, platen, zakken)</span><span class="lang-nl-print">Stuw material (balken, platen, zakken)</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Grede</span><span class="lang-text en hidden">Stow material / Beams</span><span class="lang-text nl hidden">Stuw material / Balken</span><span class="lang-nl-print">Stuw material / Balken</span></td>
+            <td class="p-0.5 pl-3"><span class="lang-text hr">Postavljene etikete / Fotografije napravljene</span><span class="lang-text en hidden">Labels applied / Photos taken</span><span class="lang-text nl hidden">Labels aangebracht / Foto's gemaakt</span><span class="lang-nl-print">Labels aangebracht / Foto's gemaakt</span></td>
             <td class="text-center"><input type="checkbox"></td>
             <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Drvene ploče</span><span class="lang-text en hidden">Stow material / Wooden boards</span><span class="lang-text nl hidden">Stuw material / Houten platen</span><span class="lang-nl-print">Stuw material / Houten platen</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Zračni jastuci</span><span class="lang-text en hidden">Stow material / Airbags</span><span class="lang-text nl hidden">Stuw material / Luchtzakken</span><span class="lang-nl-print">Stuw material / Luchtzakken</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Palete</span><span class="lang-text en hidden">Stow material / Pallets</span><span class="lang-text nl hidden">Stuw material / Pallets</span><span class="lang-nl-print">Stuw material / Pallets</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Trake</span><span class="lang-text en hidden">Stow material / Straps</span><span class="lang-text nl hidden">Stuw material / Straps</span><span class="lang-nl-print">Stuw material / Straps</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Materijal za osiguranje / Ostalo</span><span class="lang-text en hidden">Stow material / Other</span><span class="lang-text nl hidden">Stuw material / Overig</span><span class="lang-nl-print">Stuw material / Overig</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Postavljene etikete na kontejner</span><span class="lang-text en hidden">Container labels applied</span><span class="lang-text nl hidden">Containerlabels aangebracht</span><span class="lang-nl-print">Containerlabels aangebracht</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
-          </tr>
-          <tr>
-            <td class="p-1 pl-4"><span class="lang-text hr">Fotografije napravljene</span><span class="lang-text en hidden">Photos taken</span><span class="lang-text nl hidden">Foto's gemaakt</span><span class="lang-nl-print">Foto's gemaakt</span></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><input type="checkbox"></td>
-            <td><input type="text" class="w-full p-1 border-0"></td>
+            <td><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
           </tr>
           <tr class="bg-gray-50">
-            <td class="p-1 pl-4 italic text-xs">
-              <span class="lang-text hr">Popunio:</span><span class="lang-text en hidden">Filled in by:</span><span class="lang-text nl hidden">Ingevuld door:</span><span class="lang-nl-print">Ingevuld door:</span>
+            <td class="p-1 pl-3 italic text-[10px] font-bold">
+              <span class="lang-text hr">Popunio / Potpis radnika:</span><span class="lang-text en hidden">Filled / Signature worker:</span><span class="lang-text nl hidden">Ingevuld / Handtekening:</span><span class="lang-nl-print">Ingevuld / Handtekening:</span>
             </td>
-            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-xs"></td>
+            <td colspan="3"><input type="text" class="w-full p-0.5 border-0 text-[10px]"></td>
           </tr>
         </tbody>
       </table>
-    </section>
+
+      <!-- Završni potpisi na dnu 2. stranice -->
+      <div class="mt-3 grid grid-cols-2 gap-4 border border-gray-400 p-2 rounded text-xs bg-slate-50">
+        <div>
+          <label class="font-bold text-gray-700 block mb-1">
+            <span class="lang-text hr">Potpis voditelja skladišta:</span>
+            <span class="lang-text en hidden">Warehouse Supervisor Signature:</span>
+            <span class="lang-text nl hidden">Handtekening Voorman:</span>
+            <span class="lang-nl-print">Handtekening Voorman:</span>
+          </label>
+          <div class="border-b border-gray-400 h-7"></div>
+        </div>
+        <div>
+          <label class="font-bold text-gray-700 block mb-1">
+            <span class="lang-text hr">Potpis vozača / prijemnika:</span>
+            <span class="lang-text en hidden">Driver / Receiver Signature:</span>
+            <span class="lang-text nl hidden">Handtekening Chauffeur:</span>
+            <span class="lang-nl-print">Handtekening Chauffeur:</span>
+          </label>
+          <div class="border-b border-gray-400 h-7"></div>
+        </div>
+      </div>
+    </div>
 
   </div>
 
@@ -499,10 +524,8 @@
         el.classList.remove('hidden');
       });
 
-      // Update dropdown selection
       document.getElementById('langSelect').value = lang;
 
-      // Update Nav texts
       const navTexts = {
         hr: { menu: 'Izbornik', timer: 'Štoperica', gen: 'Generator', form: 'Obrazac' },
         en: { menu: 'Menu', timer: 'Timer', gen: 'Generator', form: 'Form' },
