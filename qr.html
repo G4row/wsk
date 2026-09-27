@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pallet & Barcode Generator - Warehouse Swiss Knife</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Skripte za OCR, Excel, PDF parser, Barcode, QR i PDF export -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* Prilagođeni stilovi za PDF A4 pregled */
+    .a4-preview-wrapper {
+      margin-top: 20px;
+      overflow-x: auto;
+      background: #cbd5e1;
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .a4Page {
+      width: 210mm;
+      height: 297mm;
+      padding: 12mm;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      color: #0f172a;
+    }
+
+    .a4-header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pallet-info { display: flex; align-items: center; gap: 12px; }
+    .pallet-text { font-size: 14pt; font-weight: bold; }
+    .pallet-barcode-container svg { height: 35px; max-width: 180px; }
+    .page-number-tag { font-size: 9pt; color: #64748b; font-weight: 600; }
+
+    .a4-content {
+      display: flex;
+      gap: 15px;
+      flex: 1;
+      height: calc(100% - 70px);
+    }
+
+    .left-col {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px 12px;
+      max-height: 100%;
+    }
+
+    .barcode-item {
+      width: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 4px;
+    }
+
+    .barcode-item svg { width: 100%; height: 30px; }
+    .barcode-val { font-family: monospace; font-size: 7.5pt; font-weight: bold; word-break: break-all; }
+
+    .right-col {
+      width: 40%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-left: 1px dashed #cbd5e1;
+      padding-left: 15px;
+    }
+
+    .qr-box {
+      text-align: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      width: 100%;
+    }
+
+    .qr-box h3 { margin: 0 0 8px 0; font-size: 10pt; }
+    .qr-container { display: flex; justify-content: center; margin-bottom: 8px; }
+    .qr-desc { font-size: 7.5pt; color: #64748b; word-break: break-all; max-height: 100px; overflow: hidden; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1 data-i18n="qr_header">Pallet & Barcode Generator</h1>
+      <p data-i18n="qr_sub">Generiranje A4 PDF naljepnica, barkodova i QR kodova</p>
+    </div>
+    <div class="lang-switcher">
+      <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" onclick="setLanguage('nl')">NL</button>
+      <button class="lang-btn" onclick="setLanguage('hr')">HR</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="flex-row" style="flex-wrap: wrap; gap: 15px;">
+        <div class="form-group flex-1">
+          <label for="palletIdInput" data-i18n="lbl_pallet_id">1. Unesite PalletID:</label>
+          <input type="text" id="palletIdInput" value="PALLET-2026-987" oninput="renderPreview()">
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="fileInput" data-i18n="lbl_upload">2. Učitajte datoteku (Slika, PDF ili Excel):</label>
+          <input type="file" id="fileInput" accept="image/*, .pdf, .xlsx, .xls, .csv">
+          <div id="status" style="font-size: 0.8rem; color: #64748b; margin-top: 4px;" data-i18n="status_ready">Spremno za rad.</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="resultText" data-i18n="lbl_codes">3. Kodovi artikala (odvojeni zarezom):</label>
+        <textarea id="resultText" style="width:100%; height:80px;" placeholder="Unesite kodove odvojene zarezom..."></textarea>
+      </div>
+
+      <div class="btn-group" style="margin-top: 10px;">
+        <button class="btn btn-primary" onclick="renderPreview()" data-i18n="btn_refresh">Osvježi Prikaz</button>
+        <button class="btn btn-secondary" onclick="downloadPDF()" data-i18n="btn_pdf">Spremi / Printaj PDF</button>
+      </div>
+    </div>
+
+    <div class="a4-preview-wrapper" id="pdfExportContainer"></div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="nav-bar">
+    <a href="javascript:goTo('index.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span data-i18n="nav_menu">Izbornik</span>
+    </a>
+    <a href="javascript:goTo('mod.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>
+      MOD
+    </a>
+    <a href="javascript:goTo('picking.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Picking
+    </a>
+    <a href="javascript:goTo('abc.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.5 5h3v14h-3zM16 13h3v6h-3z"/></svg>
+      ABC
+    </a>
+    <a href="javascript:goTo('stopwatch.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-2 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+      <span data-i18n="nav_timer">Štoperica</span>
+    </a>
+    <a href="javascript:goTo('inventory.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zm-1 5H5v-4h14v4zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zm-1 5H5V5h14v3z"/></svg>
+      Inventory
+    </a>
+    <a href="javascript:goTo('locations.html')" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span data-i18n="nav_gen">Generator</span>
+    </a>
+    <a href="javascript:goTo('qr.html')" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v2h2v-2zm-3 2h-2v2h2v-2zm3 2h-2v2h2v-2zm0 2h2v2h-2v-2zm-2 0h-2v2h2v-2z"/></svg>
+      <span>QR/Barcode</span>
+    </a>
+  </nav>
+
+  <script>
+    const i18nData = {
+      en: {
+        qr_header: "Pallet & Barcode Generator", qr_sub: "Generate A4 PDF labels, barcodes & QR codes",
+        lbl_pallet_id: "1. Enter PalletID:", lbl_upload: "2. Upload File (Image, PDF or Excel):", status_ready: "Ready.",
+        lbl_codes: "3. Product Codes (comma-separated):", btn_refresh: "Refresh Preview", btn_pdf: "Save / Print PDF",
+        nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
+      },
+      nl: {
+        qr_header: "Pallet & Barcode Generator", qr_sub: "Genereer A4 PDF labels, barcodes & QR codes",
+        lbl_pallet_id: "1. Voer PalletID in:", lbl_upload: "2. Upload bestand (Afbeelding, PDF of Excel):", status_ready: "Klaar voor gebruik.",
+        lbl_codes: "3. Productcodes (kommagescheiden):", btn_refresh: "Vernieuw Weergave", btn_pdf: "Opslaan / PDF Afdrukken",
+        nav_menu: "Menu", nav_timer: "Timer", nav_gen: "Generator"
+      },
+      hr: {
+        qr_header: "Pallet & Barcode Generator", qr_sub: "Generiranje A4 PDF naljepnica, barkodova i QR kodova",
+        lbl_pallet_id: "1. Unesite PalletID:", lbl_upload: "2. Učitajte datoteku (Slika, PDF ili Excel):", status_ready: "Spremno za rad.",
+        lbl_codes: "3. Kodovi artikala (odvojeni zarezom):", btn_refresh: "Osvježi Prikaz", btn_pdf: "Spremi / Printaj PDF",
+        nav_menu: "Izbornik", nav_timer: "Štoperica", nav_gen: "Generator"
+      }
+    };
+
+    let currentLang = localStorage.getItem('appLang') || sessionStorage.getItem('appLang') || 'hr';
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('appLang', lang);
+      sessionStorage.setItem('appLang', lang);
+
+      const btns = document.querySelectorAll('.lang-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      if(lang === 'en') btns[0]?.classList.add('active');
+      if(lang === 'nl') btns[1]?.classList.add('active');
+      if(lang === 'hr') btns[2]?.classList.add('active');
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18nData[lang] && i18nData[lang][key]) el.innerText = i18nData[lang][key];
+      });
+    }
+
+    function goTo(page) { window.location.href = page; }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    const fileInput = document.getElementById('fileInput');
+    const statusDiv = document.getElementById('status');
+    const resultText = document.getElementById('resultText');
+    const palletIdInput = document.getElementById('palletIdInput');
+
+    resultText.value = Array.from({length: 28}, (_, i) => `PROD-${1000 + i + 1}`).join(", ");
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      statusDiv.innerText = "Obrada datoteke...";
+      const fileName = file.name.toLowerCase();
+
+      try {
+        if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+          await processExcel(file);
+        } else if (fileName.endsWith('.pdf')) {
+          await processPDF(file);
+        } else if (file.type.startsWith('image/')) {
+          await processImage(file);
+        }
+      } catch (err) {
+        statusDiv.innerText = "Greška pri čitanju datoteke.";
+      }
+    });
+
+    async function processExcel(file) {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      let extracted = [];
+      json.forEach(row => {
+        row.forEach(cell => {
+          if (cell !== null && cell !== undefined) {
+            let str = String(cell).trim();
+            if (str) extracted.push(str);
+          }
+        });
+      });
+
+      resultText.value = extracted.join(", ");
+      statusDiv.innerText = "Excel uspješno učitan!";
+      renderPreview();
+    }
+
+    async function processPDF(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+      }
+
+      let codes = fullText.split(/[\s,\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+      resultText.value = codes.join(", ");
+      statusDiv.innerText = "PDF uspješno učitan!";
+      renderPreview();
+    }
+
+    async function processImage(file) {
+      const worker = await Tesseract.createWorker('eng');
+      const ret = await worker.recognize(file);
+      await worker.terminate();
+
+      const lines = ret.data.text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      resultText.value = lines.join(", ");
+      statusDiv.innerText = "Slika uspješno očitana!";
+      renderPreview();
+    }
+
+    function renderPreview() {
+      const raw = resultText.value.trim();
+      const palletId = palletIdInput.value.trim() || "PALLET-N/A";
+      const container = document.getElementById('pdfExportContainer');
+      container.innerHTML = '';
+
+      if (!raw) return;
+
+      const items = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      const ITEMS_PER_PAGE = 28;
+      const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE) || 1;
+
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        const pageItems = items.slice(pageIdx * ITEMS_PER_PAGE, (pageIdx + 1) * ITEMS_PER_PAGE);
+        const pageRawValue = pageItems.join(", ");
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'a4Page';
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'a4-header';
+        headerDiv.innerHTML = `
+          <div class="pallet-info">
+            <span class="pallet-text">PalletID: [ ${palletId} ]</span>
+            <div class="pallet-barcode-container">
+              <svg id="pallet-bc-${pageIdx}"></svg>
+            </div>
+          </div>
+          <div class="page-number-tag">Stranica ${pageIdx + 1} od ${totalPages}</div>
+        `;
+        pageDiv.appendChild(headerDiv);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'a4-content';
+
+        const leftCol = document.createElement('div');
+        leftCol.className = 'left-col';
+
+        pageItems.forEach((code, idx) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'barcode-item';
+
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.id = `item-bc-${pageIdx}-${idx}`;
+          itemDiv.appendChild(svg);
+
+          const valText = document.createElement('div');
+          valText.className = 'barcode-val';
+          valText.innerText = code;
+          itemDiv.appendChild(valText);
+
+          leftCol.appendChild(itemDiv);
+        });
+
+        const rightCol = document.createElement('div');
+        rightCol.className = 'right-col';
+
+        const qrBox = document.createElement('div');
+        qrBox.className = 'qr-box';
+        qrBox.innerHTML = `
+          <h3>QR Kod Vrijednosti</h3>
+          <div class="qr-container" id="qr-target-${pageIdx}"></div>
+          <div class="qr-desc">${pageRawValue}</div>
+        `;
+        rightCol.appendChild(qrBox);
+
+        contentDiv.appendChild(leftCol);
+        contentDiv.appendChild(rightCol);
+        pageDiv.appendChild(contentDiv);
+        container.appendChild(pageDiv);
+
+        try {
+          JsBarcode(`#pallet-bc-${pageIdx}`, palletId, { format: "CODE128", displayValue: false, height: 35, margin: 0 });
+        } catch (e) {
+          JsBarcode(`#pallet-bc-${pageIdx}`, "ERR", { displayValue: false });
+        }
+
+        pageItems.forEach((code, idx) => {
+          try {
+            JsBarcode(`#item-bc-${pageIdx}-${idx}`, code, { format: "CODE128", displayValue: false, height: 25, margin: 0 });
+          } catch (e) {
+            JsBarcode(`#item-bc-${pageIdx}-${idx}`, "ERR", { displayValue: false });
+          }
+        });
+
+        new QRCode(document.getElementById(`qr-target-${pageIdx}`), {
+          text: pageRawValue,
+          width: 170,
+          height: 170,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById('pdfExportContainer');
+      const opt = {
+        margin:       0,
+        filename:     `Paleta_${palletIdInput.value.trim() || 'export'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setLanguage(currentLang);
+      renderPreview();
+    });
+  </script>
+</body>
+</html>
